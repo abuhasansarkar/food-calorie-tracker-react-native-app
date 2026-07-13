@@ -20,6 +20,7 @@ import Animated, {
   withSequence,
   withDelay,
 } from "react-native-reanimated";
+import * as ImagePicker from "expo-image-picker";
 
 const SCAN_FRAME_SIZE = 260;
 
@@ -85,6 +86,33 @@ export default function ScanScreen() {
       }
     } catch {
       router.push("/meal/analyzing");
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert("Permission to access the photo library is required!");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedUri = result.assets[0].uri;
+        router.push({
+          pathname: "/meal/analyzing",
+          params: { imageUri: selectedUri },
+        });
+      }
+    } catch (e) {
+      console.error("Error picking image:", e);
+      alert("Failed to pick image from gallery.");
     }
   };
 
@@ -223,6 +251,17 @@ export default function ScanScreen() {
           accessibilityLabel="Take photo"
         >
           <View style={styles.shutterButtonInner} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.panelButton}
+          onPress={handlePickImage}
+          activeOpacity={0.7}
+          accessibilityLabel="Choose from gallery"
+        >
+          <View style={styles.panelIconCircle}>
+            <MaterialCommunityIcons name="image-multiple-outline" size={24} color="#FFFFFF" />
+          </View>
+          <Text style={styles.panelButtonText}>Gallery</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.panelButton}
