@@ -50,12 +50,15 @@ export default function ProgressScreen() {
 
     const realWeights = progressStore.progressData.weights;
     if (realWeights.length >= 2) {
-      // Use the most recent 7 weight entries
       const recent = realWeights.slice(-7);
-      return recent.map((entry, idx) => ({
-        label: DAY_LABELS[idx % 7],
-        value: entry.weightKg,
-      }));
+      return recent.map((entry) => {
+        const date = new Date(entry.date);
+        const dayLabel = date.toLocaleDateString("en-US", { weekday: "short" });
+        return {
+          label: dayLabel,
+          value: entry.weightKg,
+        };
+      });
     }
 
     // Fallback: generate approximate 7-day data scaled to current weight

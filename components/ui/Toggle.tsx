@@ -54,6 +54,7 @@ export function Toggle({
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
+        accessibilityLabel={label}
         trackColor={{
           false: isDark ? colors.neutral[800] : colors.neutral[300],
           true: isDark ? "rgba(204, 255, 0, 0.4)" : colors.primary[300],

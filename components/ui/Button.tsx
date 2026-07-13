@@ -71,6 +71,9 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading }}
       className={`items-center justify-center flex-row ${fullWidth ? "w-full" : ""} ${className}`}
       style={{
         backgroundColor: disabled

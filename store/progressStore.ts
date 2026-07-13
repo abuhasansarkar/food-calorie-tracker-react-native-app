@@ -188,15 +188,27 @@ export function useProgressStore(): ProgressStore {
 
 function calculateStreak(weights: WeightEntry[]): number {
   if (weights.length === 0) return 0;
-  let streak = 0;
-  const today = new Date();
 
-  for (let i = weights.length - 1; i >= 0; i--) {
-    const entryDate = new Date(weights[i].date);
+  const sorted = [...weights].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
+
+  let streak = 1;
+  const today = new Date();
+  const latestDate = new Date(sorted[0].date);
+
+  const daysSinceLatest = Math.round(
+    (today.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  if (daysSinceLatest > 1) return 0;
+
+  for (let i = 1; i < sorted.length; i++) {
+    const curr = new Date(sorted[i - 1].date);
+    const prev = new Date(sorted[i].date);
     const diffDays = Math.round(
-      (today.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24)
+      (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24),
     );
-    if (diffDays === streak) {
+    if (diffDays === 1) {
       streak++;
     } else {
       break;

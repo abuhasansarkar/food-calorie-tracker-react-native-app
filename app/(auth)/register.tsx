@@ -116,9 +116,10 @@ export default function RegisterScreen() {
       await clerk.setActive({ session: createdSessionId });
 
       router.replace("/(onboarding)/gender");
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as { errors?: Array<{ message: string }>; message?: string };
       setErrors({
-        general: e?.errors?.[0]?.message || e?.message || "SSO sign up failed",
+        general: err?.errors?.[0]?.message || err?.message || "SSO sign up failed",
       });
     } finally {
       setLoading(false);

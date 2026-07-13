@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, ReactNode, useState, useCallback, useEffect, useMemo } from "react";
 import { useUser, useClerk } from "@clerk/expo";
 import { UserProfile, OnboardingData } from "@/types/user";
 import * as SecureStore from "expo-secure-store";
@@ -45,19 +45,21 @@ function clerkUserToProfile(clerkUser: any): UserProfile {
 }
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const { user: clerkUser, isLoaded } = useUser();
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
   const clerk = useClerk();
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    if (isLoaded) {
+    if (clerkLoaded) {
       isGuestSession().then(setIsGuest);
       getOnboardingData().then(setOnboardingData);
     }
-  }, [isLoaded]);
+  }, [clerkLoaded]);
 
-  const user: UserProfile | null = isLoaded && clerkUser ? clerkUserToProfile(clerkUser) : null;
+  const user = useMemo<UserProfile | null>(() => {
+    return clerkLoaded && clerkUser ? clerkUserToProfile(clerkUser) : null;
+  }, [clerkLoaded, clerkUser]);
 
   const saveOnboardingData = useCallback(async (data: Partial<OnboardingData>) => {
     const existing = await SecureStore.getItemAsync(ONBOARDING_DATA_KEY);
@@ -83,19 +85,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     await clerk.signOut();
   }, [clerk]);
 
+  const contextValue = useMemo(() => ({
+    user,
+    isLoaded: clerkLoaded,
+    isGuest,
+    onboardingData,
+    saveOnboardingData,
+    getOnboardingData,
+    completeOnboarding,
+    logout,
+  }), [user, clerkLoaded, isGuest, onboardingData, saveOnboardingData, getOnboardingData, completeOnboarding, logout]);
+
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        isLoaded,
-        isGuest,
-        onboardingData,
-        saveOnboardingData,
-        getOnboardingData,
-        completeOnboarding,
-        logout,
-      }}
-    >
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );

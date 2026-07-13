@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import Animated, {
   withSequence,
   withDelay,
 } from "react-native-reanimated";
+import * as ImagePicker from "expo-image-picker";
 
 const SCAN_FRAME_SIZE = 260;
 
@@ -27,12 +28,11 @@ export default function ScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useThemeContext();
+  const cameraRef = useRef<CameraView>(null);
 
   const [facing, setFacing] = useState<CameraType>("back");
   const [flash, setFlash] = useState<FlashMode>("off");
   const [permission, requestPermission] = useCameraPermissions();
-
-  // Unmount the CameraView when app is backgrounded to avoid stale camera sessions
   const [isCameraActive, setIsCameraActive] = useState(true);
 
   useEffect(() => {
@@ -42,7 +42,6 @@ export default function ScanScreen() {
     return () => sub.remove();
   }, []);
 
-  // Reanimated shared values
   const laserY = useSharedValue(0);
   const tag1Scale = useSharedValue(1);
   const flashOpacity = useSharedValue(0);
@@ -51,7 +50,7 @@ export default function ScanScreen() {
     laserY.value = withRepeat(
       withTiming(SCAN_FRAME_SIZE - 4, { duration: 2500 }),
       -1,
-      true
+      true,
     );
 
     tag1Scale.value = withRepeat(
@@ -59,20 +58,62 @@ export default function ScanScreen() {
         300,
         withSequence(
           withTiming(1.05, { duration: 1200 }),
-          withTiming(1, { duration: 1200 })
-        )
+          withTiming(1, { duration: 1200 }),
+        ),
       ),
       -1,
-      true
+      true,
     );
   }, []);
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
+    if (!cameraRef.current) return;
+
     flashOpacity.value = 1;
     flashOpacity.value = withTiming(0, { duration: 400 });
-    setTimeout(() => {
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+        base64: false,
+      });
+
+      if (photo?.uri) {
+        router.push({
+          pathname: "/meal/analyzing",
+          params: { imageUri: photo.uri },
+        });
+      }
+    } catch {
       router.push("/meal/analyzing");
-    }, 150);
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert("Permission to access the photo library is required!");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedUri = result.assets[0].uri;
+        router.push({
+          pathname: "/meal/analyzing",
+          params: { imageUri: selectedUri },
+        });
+      }
+    } catch (e) {
+      console.error("Error picking image:", e);
+      alert("Failed to pick image from gallery.");
+    }
   };
 
   const laserStyle = useAnimatedStyle(() => ({
@@ -87,9 +128,7 @@ export default function ScanScreen() {
 
   const activeColor = colors.primary[500];
 
-  // --- Camera Permission Gate ---
   if (!permission) {
-    // Permissions still loading
     return (
       <View style={[styles.container, styles.centerContent]}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
@@ -101,16 +140,14 @@ export default function ScanScreen() {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
-        {/* Back button */}
         <TouchableOpacity
           style={[styles.controlCircle, { position: "absolute", top: Math.max(insets.top, 24), left: 20 }]}
           onPress={() => router.replace("/(tabs)/home")}
           activeOpacity={0.7}
+          accessibilityLabel="Go back"
         >
           <MaterialCommunityIcons name="chevron-left" size={28} color="#FFFFFF" />
         </TouchableOpacity>
-
         <View style={styles.permissionIconWrapper}>
           <MaterialCommunityIcons name="camera-off" size={52} color="rgba(255,255,255,0.5)" />
         </View>
@@ -122,6 +159,7 @@ export default function ScanScreen() {
           style={[styles.permissionButton, { backgroundColor: activeColor }]}
           onPress={requestPermission}
           activeOpacity={0.85}
+          accessibilityLabel="Grant camera access"
         >
           <Text style={[styles.permissionButtonText, { color: "#000000" }]}>
             Grant Camera Access
@@ -131,36 +169,27 @@ export default function ScanScreen() {
     );
   }
 
-  // --- Main Camera View ---
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
-      {/* Live Camera — unmounted when app is backgrounded */}
       {isCameraActive && (
         <CameraView
+          ref={cameraRef}
           style={StyleSheet.absoluteFillObject}
           facing={facing}
           flash={flash}
           mode="picture"
         />
       )}
-
-      {/* Viewfinder Dark Overlay Masks */}
       <View style={styles.overlayContainer}>
         <View style={styles.maskTop} />
-
         <View style={styles.maskMiddleRow}>
           <View style={styles.maskSide} />
-
-          {/* Scanning frame — transparent viewport */}
           <View style={styles.scanViewport}>
             <View style={[styles.cornerTick, styles.topLeft, { borderColor: activeColor }]} />
             <View style={[styles.cornerTick, styles.topRight, { borderColor: activeColor }]} />
             <View style={[styles.cornerTick, styles.bottomLeft, { borderColor: activeColor }]} />
             <View style={[styles.cornerTick, styles.bottomRight, { borderColor: activeColor }]} />
-
-            {/* Sweeping Laser Line */}
             <Animated.View
               style={[
                 styles.laserLine,
@@ -168,39 +197,33 @@ export default function ScanScreen() {
                 { backgroundColor: activeColor, shadowColor: activeColor },
               ]}
             />
-
-            {/* Live detection tag */}
             <Animated.View style={[styles.foodTag, styles.tag1, tag1Style]}>
               <View style={[styles.tagDot, { backgroundColor: activeColor }]} />
-              <Text style={styles.tagText}>Scanning…</Text>
+              <Text style={styles.tagText}>Scanning...</Text>
             </Animated.View>
           </View>
-
           <View style={styles.maskSide} />
         </View>
-
         <View style={styles.maskBottom} />
       </View>
-
-      {/* Top Controls */}
       <View style={[styles.headerControls, { paddingTop: Math.max(insets.top, 24) }]}>
         <TouchableOpacity
           style={styles.controlCircle}
           onPress={() => router.replace("/(tabs)/home")}
           activeOpacity={0.7}
+          accessibilityLabel="Close camera"
         >
           <MaterialCommunityIcons name="chevron-left" size={28} color="#FFFFFF" />
         </TouchableOpacity>
-
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>AI Scanner</Text>
           <Text style={styles.headerSubtitle}>Center your meal in the frame</Text>
         </View>
-
         <TouchableOpacity
           style={styles.controlCircle}
           onPress={() => setFlash((f) => (f === "off" ? "on" : "off"))}
           activeOpacity={0.7}
+          accessibilityLabel={flash === "on" ? "Disable flash" : "Enable flash"}
         >
           <MaterialCommunityIcons
             name={flash === "on" ? "flash" : "flash-off"}
@@ -209,40 +232,49 @@ export default function ScanScreen() {
           />
         </TouchableOpacity>
       </View>
-
-      {/* Bottom Controls Panel */}
       <View style={[styles.bottomPanel, { paddingBottom: Math.max(insets.bottom, 24) + 12 }]}>
-        {/* Flip Camera */}
         <TouchableOpacity
           style={styles.panelButton}
           onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))}
           activeOpacity={0.7}
+          accessibilityLabel="Flip camera"
         >
           <View style={styles.panelIconCircle}>
             <MaterialCommunityIcons name="camera-flip-outline" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.panelButtonText}>Flip</Text>
         </TouchableOpacity>
-
-        {/* Capture Shutter */}
         <TouchableOpacity
           style={[styles.shutterButtonOuter, { borderColor: activeColor }]}
           onPress={handleCapture}
           activeOpacity={0.8}
+          accessibilityLabel="Take photo"
         >
           <View style={styles.shutterButtonInner} />
         </TouchableOpacity>
-
-        {/* Manual Search */}
-        <TouchableOpacity style={styles.panelButton} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.panelButton}
+          onPress={handlePickImage}
+          activeOpacity={0.7}
+          accessibilityLabel="Choose from gallery"
+        >
+          <View style={styles.panelIconCircle}>
+            <MaterialCommunityIcons name="image-multiple-outline" size={24} color="#FFFFFF" />
+          </View>
+          <Text style={styles.panelButtonText}>Gallery</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.panelButton}
+          activeOpacity={0.7}
+          onPress={() => router.push("/meal/result")}
+          accessibilityLabel="Manual entry"
+        >
           <View style={styles.panelIconCircle}>
             <MaterialCommunityIcons name="magnify" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.panelButtonText}>Manual</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Shutter Flash Overlay */}
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFillObject, styles.shutterFlash, flashStyle]}
@@ -252,240 +284,80 @@ export default function ScanScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000",
-  },
-  centerContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 32,
-  },
-  overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  maskTop: {
-    flex: 1.2,
-    backgroundColor: "rgba(0, 0, 0, 0.55)",
-  },
-  maskMiddleRow: {
-    height: SCAN_FRAME_SIZE,
-    flexDirection: "row",
-  },
-  maskSide: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.55)",
-  },
-  scanViewport: {
-    width: SCAN_FRAME_SIZE,
-    height: SCAN_FRAME_SIZE,
-    position: "relative",
-    overflow: "hidden",
-  },
-  maskBottom: {
-    flex: 2,
-    backgroundColor: "rgba(0, 0, 0, 0.55)",
-  },
-  cornerTick: {
-    position: "absolute",
-    width: 28,
-    height: 28,
-    borderWidth: 4,
-    zIndex: 10,
-  },
-  topLeft: {
-    top: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 12,
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: 12,
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: 12,
-  },
+  container: { flex: 1, backgroundColor: "#000000" },
+  centerContent: { alignItems: "center", justifyContent: "center", paddingHorizontal: 32 },
+  overlayContainer: { ...StyleSheet.absoluteFillObject },
+  maskTop: { flex: 1.2, backgroundColor: "rgba(0, 0, 0, 0.55)" },
+  maskMiddleRow: { height: SCAN_FRAME_SIZE, flexDirection: "row" },
+  maskSide: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.55)" },
+  scanViewport: { width: SCAN_FRAME_SIZE, height: SCAN_FRAME_SIZE, position: "relative", overflow: "hidden" },
+  maskBottom: { flex: 2, backgroundColor: "rgba(0, 0, 0, 0.55)" },
+  cornerTick: { position: "absolute", width: 28, height: 28, borderWidth: 4, zIndex: 10 },
+  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 12 },
+  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 12 },
+  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 12 },
+  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 12 },
   laserLine: {
-    position: "absolute",
-    left: 4,
-    right: 4,
-    height: 2.5,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
-    elevation: 4,
-    zIndex: 5,
+    position: "absolute", left: 4, right: 4, height: 2.5,
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.9, shadowRadius: 8,
+    elevation: 4, zIndex: 5,
   },
   foodTag: {
-    position: "absolute",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    zIndex: 8,
+    position: "absolute", flexDirection: "row", alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)", paddingVertical: 5, paddingHorizontal: 10,
+    borderRadius: 20, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.2)", zIndex: 8,
   },
-  tagDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  tagText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  tag1: {
-    top: 40,
-    left: 20,
-  },
+  tagDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
+  tagText: { color: "#FFFFFF", fontSize: 10, fontWeight: "bold" },
+  tag1: { top: 40, left: 20 },
   headerControls: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    zIndex: 20,
+    position: "absolute", top: 0, left: 0, right: 0,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 20, zIndex: 20,
   },
   controlCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
-    justifyContent: "center",
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", alignItems: "center", justifyContent: "center",
   },
-  headerTitleContainer: {
-    alignItems: "center",
-  },
+  headerTitleContainer: { alignItems: "center" },
   headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "900",
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    color: "#FFFFFF", fontSize: 18, fontWeight: "900",
+    textShadowColor: "rgba(0, 0, 0, 0.75)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
   headerSubtitle: {
-    color: "rgba(255, 255, 255, 0.7)",
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    color: "rgba(255, 255, 255, 0.7)", fontSize: 11, fontWeight: "600", marginTop: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.75)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
   bottomPanel: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 30,
-    paddingTop: 20,
-    zIndex: 20,
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    flexDirection: "row", justifyContent: "space-around", alignItems: "center",
+    paddingHorizontal: 30, paddingTop: 20, zIndex: 20,
   },
-  panelButton: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  panelButton: { alignItems: "center", justifyContent: "center" },
   panelIconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)",
   },
   panelButtonText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "bold",
-    marginTop: 6,
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: "#FFFFFF", fontSize: 11, fontWeight: "bold", marginTop: 6,
+    textShadowColor: "rgba(0, 0, 0, 0.75)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
   shutterButtonOuter: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 5,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
+    width: 76, height: 76, borderRadius: 38, borderWidth: 5,
+    alignItems: "center", justifyContent: "center", backgroundColor: "transparent",
   },
-  shutterButtonInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#FFFFFF",
-  },
-  shutterFlash: {
-    backgroundColor: "#FFFFFF",
-    zIndex: 99,
-  },
-  // Permission screen styles
+  shutterButtonInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#FFFFFF" },
+  shutterFlash: { backgroundColor: "#FFFFFF", zIndex: 99 },
   permissionIconWrapper: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "rgba(255,255,255,0.07)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center", marginBottom: 24,
   },
-  permissionTitle: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "900",
-    textAlign: "center",
-    marginBottom: 12,
-  },
+  permissionTitle: { color: "#FFFFFF", fontSize: 22, fontWeight: "900", textAlign: "center", marginBottom: 12 },
   permissionSubtitle: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 36,
+    color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: "500",
+    textAlign: "center", lineHeight: 22, marginBottom: 36,
   },
-  permissionButton: {
-    paddingHorizontal: 36,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  permissionButtonText: {
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
+  permissionButton: { paddingHorizontal: 36, paddingVertical: 16, borderRadius: 16, alignItems: "center" },
+  permissionButtonText: { fontSize: 16, fontWeight: "800", letterSpacing: 0.3 },
 });

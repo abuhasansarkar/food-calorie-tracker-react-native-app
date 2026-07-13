@@ -53,11 +53,11 @@ export function useCalories(options: UseCaloriesOptions) {
 
   const macroProgress = useMemo(
     () => ({
-      protein: calorieService.getMacroProgress(0, requirements.proteinG),
-      carbs: calorieService.getMacroProgress(0, requirements.carbsG),
-      fat: calorieService.getMacroProgress(0, requirements.fatG),
+      protein: calorieService.getMacroProgress(options.consumedCalories || 0, requirements.proteinG),
+      carbs: calorieService.getMacroProgress(options.consumedCalories || 0, requirements.carbsG),
+      fat: calorieService.getMacroProgress(options.consumedCalories || 0, requirements.fatG),
     }),
-    [requirements]
+    [options.consumedCalories, requirements.proteinG, requirements.carbsG, requirements.fatG]
   );
 
   return {

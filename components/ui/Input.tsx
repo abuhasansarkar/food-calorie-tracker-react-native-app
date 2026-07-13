@@ -18,6 +18,8 @@ interface InputProps {
   disabled?: boolean;
   maxLength?: number;
   rightIcon?: React.ReactNode;
+  onSubmitEditing?: () => void;
+  returnKeyType?: "search" | "default" | "done" | "go" | "next" | "send";
 }
 
 export function Input({
@@ -34,6 +36,8 @@ export function Input({
   disabled = false,
   maxLength,
   rightIcon,
+  onSubmitEditing,
+  returnKeyType,
 }: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -85,6 +89,9 @@ export function Input({
           maxLength={maxLength}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onSubmitEditing={onSubmitEditing}
+          returnKeyType={returnKeyType}
+          accessibilityLabel={label || placeholder}
           style={{
             flex: 1,
             fontSize: 16,

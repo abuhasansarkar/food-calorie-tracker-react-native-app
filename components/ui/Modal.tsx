@@ -1,5 +1,5 @@
 import { View, Text, Modal as RNModal, TouchableOpacity } from "react-native";
-import { colors } from "@/theme/colors";
+import { useThemeContext } from "@/context/ThemeContext";
 import { radius } from "@/theme/radius";
 import { spacing } from "@/theme/spacing";
 
@@ -18,6 +18,8 @@ export function Modal({
   children,
   animationType = "slide",
 }: ModalProps) {
+  const { isDark, colors } = useThemeContext();
+
   return (
     <RNModal
       visible={visible}
@@ -28,7 +30,7 @@ export function Modal({
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          backgroundColor: "rgba(0, 0, 0, 0.55)",
           justifyContent: "flex-end",
         }}
       >
@@ -40,20 +42,20 @@ export function Modal({
 
         <View
           style={{
-            backgroundColor: colors.white,
+            backgroundColor: isDark ? colors.surface.dark : colors.white,
             borderTopLeftRadius: radius.xxl,
             borderTopRightRadius: radius.xxl,
             paddingHorizontal: spacing.xl,
             paddingTop: spacing.lg,
             paddingBottom: spacing.huge,
-            maxHeight: "80%",
+            maxHeight: "85%",
           }}
         >
           <View
             style={{
               width: 40,
               height: 4,
-              backgroundColor: colors.neutral[300],
+              backgroundColor: isDark ? colors.neutral[700] : colors.neutral[300],
               borderRadius: 2,
               alignSelf: "center",
               marginBottom: spacing.lg,
@@ -65,7 +67,7 @@ export function Modal({
               style={{
                 fontSize: 20,
                 fontWeight: "700",
-                color: colors.neutral[900],
+                color: isDark ? colors.text.dark : colors.neutral[900],
                 marginBottom: spacing.lg,
               }}
             >

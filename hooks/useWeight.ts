@@ -9,12 +9,15 @@ export function useWeight() {
     (weightKg: number, notes?: string) => {
       store.addWeightEntry(weightKg, notes);
     },
-    [store]
+    [store],
   );
 
   const getWeeklyProgress = useCallback((): WeeklyProgress[] => {
-    store.calculateWeeklyProgress();
     return store.weeklyProgress;
+  }, [store.weeklyProgress]);
+
+  const calcWeeklyProgress = useCallback(() => {
+    store.calculateWeeklyProgress();
   }, [store]);
 
   const getMonthlyProgress = useCallback((): MonthlyProgress => {
@@ -33,6 +36,7 @@ export function useWeight() {
     addWeight,
     removeWeightEntry: store.removeWeightEntry,
     getWeeklyProgress,
+    calcWeeklyProgress,
     getMonthlyProgress,
   };
 }

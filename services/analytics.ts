@@ -1,3 +1,5 @@
+import { Config } from "@/constants/Config";
+
 export interface AnalyticsEvent {
   name: string;
   properties?: Record<string, unknown>;
@@ -15,6 +17,15 @@ export interface UserProperties {
 class AnalyticsService {
   private events: AnalyticsEvent[] = [];
   private userProperties: UserProperties = {};
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    if (typeof global !== "undefined") {
+      this.flushInterval = setInterval(() => {
+        this.flush();
+      }, 30000);
+    }
+  }
 
   setUserProperties(properties: UserProperties): void {
     this.userProperties = { ...this.userProperties, ...properties };
@@ -31,7 +42,10 @@ class AnalyticsService {
     };
 
     this.events.push(event);
-    console.log("[Analytics]", name, properties);
+
+    if (__DEV__) {
+      console.log("[Analytics]", name, properties);
+    }
   }
 
   trackScreen(screenName: string): void {
@@ -76,10 +90,34 @@ class AnalyticsService {
     return this.events;
   }
 
-  flush(): void {
-    if (this.events.length > 0) {
-      console.log(`[Analytics] Flushing ${this.events.length} events`);
-      this.events = [];
+  async flush(): Promise<void> {
+    if (this.events.length === 0) return;
+
+    const batch = [...this.events];
+    this.events = [];
+
+    try {
+      const response = await fetch(`${Config.api.baseUrl}/analytics/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ events: batch }),
+      });
+
+      if (!response.ok && __DEV__) {
+        console.warn("[Analytics] Failed to flush events:", response.status);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("[Analytics] Flush failed, re-queuing events:", error);
+      }
+      this.events = [...batch, ...this.events];
+    }
+  }
+
+  destroy(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
     }
   }
 }

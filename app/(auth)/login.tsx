@@ -79,8 +79,9 @@ export default function LoginScreen() {
       await clerk.setActive({ session: createdSessionId });
 
       router.replace("/(onboarding)/gender");
-    } catch (e: any) {
-      setError(e?.errors?.[0]?.message || e?.message || "SSO sign in failed");
+    } catch (e: unknown) {
+      const err = e as { errors?: Array<{ message: string }>; message?: string };
+      setError(err?.errors?.[0]?.message || err?.message || "SSO sign in failed");
     } finally {
       setLoading(false);
     }
