@@ -12,11 +12,18 @@ const TabBarVisibilityContext = createContext<TabBarVisibilityContextType | unde
 export function TabBarVisibilityProvider({ children }: { children: React.ReactNode }) {
   const [isTabBarVisible, setTabBarVisible] = useState(true);
   const lastOffset = useRef(0);
+  const throttleRef = useRef(false);
 
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (throttleRef.current) return;
+    throttleRef.current = true;
+
+    requestAnimationFrame(() => {
+      throttleRef.current = false;
+    });
+
     const currentOffset = event.nativeEvent.contentOffset.y;
-    
-    // Ignore scroll bounces (negative offset) and reset tab bar visibility
+
     if (currentOffset <= 0) {
       setTabBarVisible(true);
       return;
@@ -25,19 +32,15 @@ export function TabBarVisibilityProvider({ children }: { children: React.ReactNo
     const contentHeight = event.nativeEvent.contentSize.height;
     const layoutHeight = event.nativeEvent.layoutMeasurement.height;
 
-    // Ignore scroll bounces near the bottom of the list
     if (currentOffset + layoutHeight >= contentHeight - 20) {
       return;
     }
 
-    // Scroll threshold to avoid flickering / jitter
     const diff = currentOffset - lastOffset.current;
     if (Math.abs(diff) > 15) {
       if (diff > 0 && currentOffset > 80) {
-        // Scrolling down: hide the tab bar
         setTabBarVisible(false);
       } else if (diff < 0) {
-        // Scrolling up: show the tab bar
         setTabBarVisible(true);
       }
       lastOffset.current = currentOffset;

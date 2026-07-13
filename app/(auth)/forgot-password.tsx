@@ -142,8 +142,14 @@ export default function ForgotPasswordScreen() {
         >
           {step === "done" ? (
             <View className="items-center gap-4">
-              <View className="w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-2">
-                <Text className="text-3xl text-green-600">✓</Text>
+              <View
+                style={{
+                  width: 64, height: 64, borderRadius: 32,
+                  backgroundColor: isDark ? "rgba(74, 204, 116, 0.12)" : colors.success[50],
+                  alignItems: "center", justifyContent: "center", marginBottom: 8,
+                }}
+              >
+                <Text style={{ fontSize: 28, color: isDark ? colors.success[400] : colors.success[600] }}>✓</Text>
               </View>
               <Text 
                 style={{ color: isDark ? colors.text.dark : colors.text.light }}

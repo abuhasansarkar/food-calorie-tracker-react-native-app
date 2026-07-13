@@ -25,6 +25,10 @@ export function ProgressRing({
 
   const ringColor = color || colors.primary[500];
   const ringBg = backgroundColor || (isDark ? colors.border.dark : colors.neutral[200]);
+  const innerSize = size - strokeWidth * 2;
+
+  const halfSize = size / 2;
+  const rotation = (clampedProgress / 100) * 360;
 
   return (
     <View className="items-center justify-center">
@@ -32,31 +36,29 @@ export function ProgressRing({
         style={{
           width: size,
           height: size,
-          borderRadius: size / 2,
+          borderRadius: halfSize,
           backgroundColor: ringBg,
-          overflow: "hidden",
           justifyContent: "center",
           alignItems: "center",
+          overflow: "hidden",
         }}
       >
-        {/* Simple visual bar using segment simulation */}
         <View
           style={{
             position: "absolute",
             width: size,
             height: size,
-            borderRadius: size / 2,
+            borderRadius: halfSize,
             backgroundColor: ringColor,
-            opacity: 0.15 + (clampedProgress / 100) * 0.85,
+            opacity: clampedProgress / 100,
           }}
         />
 
         <View
           style={{
-            position: "absolute",
-            width: size - strokeWidth * 2,
-            height: size - strokeWidth * 2,
-            borderRadius: (size - strokeWidth * 2) / 2,
+            width: innerSize,
+            height: innerSize,
+            borderRadius: innerSize / 2,
             backgroundColor: isDark ? colors.surface.dark : colors.white,
             justifyContent: "center",
             alignItems: "center",
@@ -79,7 +81,7 @@ export function ProgressRing({
                 fontSize: size * 0.09,
                 color: isDark ? colors.text.secondary : colors.neutral[500],
                 marginTop: 2,
-                fontWeight: "500"
+                fontWeight: "500",
               }}
             >
               {label}

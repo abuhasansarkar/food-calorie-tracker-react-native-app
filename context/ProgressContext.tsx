@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useMemo } from "react";
 import { ProgressData, WeeklyProgress, MonthlyProgress, CalorieEntry } from "@/types/progress";
 import { useProgressStore } from "@/store/progressStore";
 
@@ -19,20 +19,30 @@ const ProgressContext = createContext<ProgressContextType | undefined>(undefined
 export function ProgressProvider({ children }: { children: ReactNode }) {
   const store = useProgressStore();
 
+  const contextValue = useMemo(() => ({
+    progressData: store.progressData,
+    weeklyProgress: store.weeklyProgress,
+    isLoading: store.isLoading,
+    addWeightEntry: store.addWeightEntry,
+    removeWeightEntry: store.removeWeightEntry,
+    updateCalorieEntry: store.updateCalorieEntry,
+    getCalorieEntry: store.getCalorieEntry,
+    calculateWeeklyProgress: store.calculateWeeklyProgress,
+    calculateMonthlyProgress: store.calculateMonthlyProgress,
+  }), [
+    store.progressData,
+    store.weeklyProgress,
+    store.isLoading,
+    store.addWeightEntry,
+    store.removeWeightEntry,
+    store.updateCalorieEntry,
+    store.getCalorieEntry,
+    store.calculateWeeklyProgress,
+    store.calculateMonthlyProgress,
+  ]);
+
   return (
-    <ProgressContext.Provider
-      value={{
-        progressData: store.progressData,
-        weeklyProgress: store.weeklyProgress,
-        isLoading: store.isLoading,
-        addWeightEntry: store.addWeightEntry,
-        removeWeightEntry: store.removeWeightEntry,
-        updateCalorieEntry: store.updateCalorieEntry,
-        getCalorieEntry: store.getCalorieEntry,
-        calculateWeeklyProgress: store.calculateWeeklyProgress,
-        calculateMonthlyProgress: store.calculateMonthlyProgress,
-      }}
-    >
+    <ProgressContext.Provider value={contextValue}>
       {children}
     </ProgressContext.Provider>
   );

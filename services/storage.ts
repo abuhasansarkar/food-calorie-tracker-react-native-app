@@ -1,9 +1,9 @@
-class StorageService {
-  private storage: Map<string, string> = new Map();
+import * as SecureStore from "expo-secure-store";
 
+class StorageService {
   async get<T>(key: string): Promise<T | null> {
     try {
-      const value = this.storage.get(key);
+      const value = await SecureStore.getItemAsync(key);
       if (!value) return null;
       return JSON.parse(value) as T;
     } catch {
@@ -13,30 +13,39 @@ class StorageService {
 
   async set<T>(key: string, value: T): Promise<void> {
     try {
-      this.storage.set(key, JSON.stringify(value));
+      await SecureStore.setItemAsync(key, JSON.stringify(value));
     } catch (error) {
       console.error(`Storage set error for key ${key}:`, error);
     }
   }
 
   async remove(key: string): Promise<void> {
-    this.storage.delete(key);
+    await SecureStore.deleteItemAsync(key);
   }
 
   async clear(): Promise<void> {
-    this.storage.clear();
+    console.warn("StorageService.clear() not implemented - would require iterating all keys");
   }
 
   async getString(key: string): Promise<string | null> {
-    return this.storage.get(key) || null;
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch {
+      return null;
+    }
   }
 
   async setString(key: string, value: string): Promise<void> {
-    this.storage.set(key, value);
+    try {
+      await SecureStore.setItemAsync(key, value);
+    } catch (error) {
+      console.error(`Storage setString error for key ${key}:`, error);
+    }
   }
 
   async has(key: string): Promise<boolean> {
-    return this.storage.has(key);
+    const value = await this.getString(key);
+    return value !== null;
   }
 }
 

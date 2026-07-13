@@ -61,14 +61,12 @@ function CustomTabBar({
 
   const tabOrder = ["home", "foods", "scan", "progress", "profile"];
 
-  // Sort and filter the routes to match the expected tabOrder
   const renderedRoutes = state.routes
     .filter((route) => tabOrder.includes(route.name))
     .sort((a, b) => tabOrder.indexOf(a.name) - tabOrder.indexOf(b.name));
 
-  // Hide the tab bar completely on the scan/camera screen
-  const activeRoute = state.routes[state.index];
-  if (activeRoute?.name === "scan") {
+  const activeRouteName = state.routes[state.index]?.name;
+  if (activeRouteName === "scan") {
     return null;
   }
 
@@ -158,24 +156,21 @@ function CustomTabBar({
         let activeBorderStyle = {};
 
         if (isFocused) {
+          activeBorderStyle = {
+            borderTopWidth: 2,
+            borderColor: activeColor,
+          };
           if (displayIndex === 0) {
             activeBorderStyle = {
-              borderTopWidth: 2,
+              ...activeBorderStyle,
               borderLeftWidth: 2,
               borderTopLeftRadius: 28,
-              borderColor: activeColor,
-            };
-          } else if (displayIndex === 1 || displayIndex === 3) {
-            activeBorderStyle = {
-              borderTopWidth: 2,
-              borderColor: activeColor,
             };
           } else if (displayIndex === 4) {
             activeBorderStyle = {
-              borderTopWidth: 2,
+              ...activeBorderStyle,
               borderRightWidth: 2,
               borderTopRightRadius: 28,
-              borderColor: activeColor,
             };
           }
         }

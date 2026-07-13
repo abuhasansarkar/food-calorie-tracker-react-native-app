@@ -85,6 +85,7 @@ export function Input({
           maxLength={maxLength}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          accessibilityLabel={label || placeholder}
           style={{
             flex: 1,
             fontSize: 16,

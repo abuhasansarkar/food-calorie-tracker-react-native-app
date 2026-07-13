@@ -159,12 +159,17 @@ export default function PaywallScreen() {
                 ))}
               </View>
 
-              <Button
-                title={plan.tier === "Free" ? "Continue Free" : `Subscribe to ${plan.tier}`}
-                onPress={() => router.replace("/(tabs)/home")}
-                variant={plan.popular ? "primary" : "outline"}
-                fullWidth
-              />
+                <Button
+                  title={plan.tier === "Free" ? "Continue Free" : `Subscribe to ${plan.tier}`}
+                  onPress={() => {
+                    if (plan.tier === "Free") {
+                      router.replace("/(tabs)/home");
+                    }
+                  }}
+                  variant={plan.popular ? "primary" : "outline"}
+                  disabled={plan.tier !== "Free"}
+                  fullWidth
+                />
             </Card>
           ))}
         </View>

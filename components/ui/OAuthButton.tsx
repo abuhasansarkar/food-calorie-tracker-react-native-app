@@ -34,7 +34,7 @@ export function OAuthButton({
       bgColor: isDark ? colors.surface.dark : colors.black,
       textColor: isDark ? colors.text.dark : colors.white,
       borderColor: isDark ? colors.border.dark : colors.black,
-      iconBg: isDark ? colors.neutral[850] || "#1A1A1A" : colors.black,
+      iconBg: isDark ? "#1A1A1A" : colors.black,
     },
   };
 

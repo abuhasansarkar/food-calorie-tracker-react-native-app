@@ -127,12 +127,12 @@ export default function SubscriptionScreen() {
                 title={`Subscribe to ${plan.tier}`}
                 onPress={() => {}}
                 variant={plan.popular ? "primary" : "outline"}
+                disabled
                 fullWidth
               />
             ) : (
               <Button
                 title="Current Plan"
-                onPress={() => {}}
                 disabled
                 fullWidth
               />

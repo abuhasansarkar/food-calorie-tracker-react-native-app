@@ -15,33 +15,30 @@ export default function SplashScreen() {
   const { isDark, colors } = useThemeContext();
 
   useEffect(() => {
-    // Wait for Clerk to finish loading, then decide where to navigate
     if (!isLoaded) return;
 
-    const navigate = async () => {
-      const timer = setTimeout(async () => {
-        const isGuest = await isGuestSession();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
 
-        if (isSignedIn || isGuest) {
-          // User is authenticated (or guest) — check if onboarding is done
-          const onboardingDone = await SecureStore.getItemAsync(ONBOARDING_COMPLETED_KEY);
-          if (onboardingDone === "true") {
-            // Already fully set up — go directly to the Home tab
-            router.replace("/(tabs)/home");
-          } else {
-            // Authenticated but onboarding not done — start onboarding
-            router.replace("/(onboarding)/gender");
-          }
+      const isGuest = await isGuestSession();
+
+      if (isSignedIn || isGuest) {
+        const onboardingDone = await SecureStore.getItemAsync(ONBOARDING_COMPLETED_KEY);
+        if (onboardingDone === "true") {
+          router.replace("/(tabs)/home");
         } else {
-          // Not signed in and not a guest — show the Welcome screen
-          router.replace("/(auth)/welcome");
+          router.replace("/(onboarding)/gender");
         }
-      }, 2000);
+      } else {
+        router.replace("/(auth)/welcome");
+      }
+    }, 2000);
 
-      return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
     };
-
-    navigate();
   }, [isLoaded, isSignedIn, router]);
 
   return (
