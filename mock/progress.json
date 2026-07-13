@@ -1,0 +1,28 @@
+{
+  "weights": [
+    { "id": "w_001", "userId": "user_001", "weightKg": 75.0, "date": "2025-05-01", "createdAt": "2025-05-01T08:00:00.000Z" },
+    { "id": "w_002", "userId": "user_001", "weightKg": 74.2, "date": "2025-05-08", "createdAt": "2025-05-08T08:00:00.000Z" },
+    { "id": "w_003", "userId": "user_001", "weightKg": 73.5, "date": "2025-05-15", "createdAt": "2025-05-15T08:00:00.000Z" },
+    { "id": "w_004", "userId": "user_001", "weightKg": 72.8, "date": "2025-05-22", "createdAt": "2025-05-22T08:00:00.000Z" },
+    { "id": "w_005", "userId": "user_001", "weightKg": 72.0, "date": "2025-05-29", "createdAt": "2025-05-29T08:00:00.000Z" },
+    { "id": "w_006", "userId": "user_001", "weightKg": 71.5, "date": "2025-06-05", "createdAt": "2025-06-05T08:00:00.000Z" },
+    { "id": "w_007", "userId": "user_001", "weightKg": 70.8, "date": "2025-06-12", "createdAt": "2025-06-12T08:00:00.000Z" },
+    { "id": "w_008", "userId": "user_001", "weightKg": 70.2, "date": "2025-06-19", "createdAt": "2025-06-19T08:00:00.000Z" }
+  ],
+  "calories": [
+    { "date": "2025-06-14", "consumed": 1850, "goal": 2500 },
+    { "date": "2025-06-15", "consumed": 2200, "goal": 2500 },
+    { "date": "2025-06-16", "consumed": 1900, "goal": 2500 },
+    { "date": "2025-06-17", "consumed": 2100, "goal": 2500 },
+    { "date": "2025-06-18", "consumed": 1780, "goal": 2500 },
+    { "date": "2025-06-19", "consumed": 1950, "goal": 2500 },
+    { "date": "2025-06-20", "consumed": 1493, "goal": 2500 }
+  ],
+  "startDate": "2025-05-01",
+  "startWeightKg": 75.0,
+  "currentWeightKg": 70.2,
+  "goalWeightKg": 65.0,
+  "weightChange": -4.8,
+  "totalDays": 51,
+  "streakDays": 7
+}

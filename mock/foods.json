@@ -1,0 +1,12 @@
+[
+  { "id": "food_001", "name": "Chicken Breast", "servingSize": "100g", "calories": 165, "proteinG": 31, "carbsG": 0, "fatG": 3.6 },
+  { "id": "food_002", "name": "Brown Rice", "servingSize": "100g", "calories": 111, "proteinG": 2.6, "carbsG": 23, "fatG": 0.9 },
+  { "id": "food_003", "name": "Salmon", "servingSize": "100g", "calories": 208, "proteinG": 20, "carbsG": 0, "fatG": 13 },
+  { "id": "food_004", "name": "Eggs", "servingSize": "2 eggs", "calories": 156, "proteinG": 13, "carbsG": 1.1, "fatG": 11 },
+  { "id": "food_005", "name": "Greek Yogurt", "servingSize": "200g", "calories": 146, "proteinG": 20, "carbsG": 8, "fatG": 3.8 },
+  { "id": "food_006", "name": "Avocado", "servingSize": "100g", "calories": 160, "proteinG": 2, "carbsG": 8.5, "fatG": 15 },
+  { "id": "food_007", "name": "Banana", "servingSize": "120g", "calories": 107, "proteinG": 1.3, "carbsG": 27, "fatG": 0.4 },
+  { "id": "food_008", "name": "Oatmeal", "servingSize": "100g", "calories": 77, "proteinG": 2.7, "carbsG": 14, "fatG": 1.3 },
+  { "id": "food_009", "name": "Sweet Potato", "servingSize": "100g", "calories": 86, "proteinG": 1.6, "carbsG": 20, "fatG": 0.1 },
+  { "id": "food_010", "name": "Almonds", "servingSize": "30g", "calories": 173, "proteinG": 6, "carbsG": 6, "fatG": 15 }
+]
