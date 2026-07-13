@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Meal, MealType, FoodItem, DailyMeals, MealHistory } from "@/types/meal";
 import { generateId } from "@/utils/helpers";
 import { getToday } from "@/utils/date";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MEALS_STORAGE_KEY = "aceky_current_meals";
 const HISTORY_STORAGE_KEY = "aceky_meal_history";
@@ -22,13 +22,13 @@ interface MealStore {
 
 async function saveToStorage(key: string, value: unknown): Promise<void> {
   try {
-    await SecureStore.setItemAsync(key, JSON.stringify(value));
+    await AsyncStorage.setItem(key, JSON.stringify(value));
   } catch {}
 }
 
 async function loadFromStorage<T>(key: string): Promise<T | null> {
   try {
-    const raw = await SecureStore.getItemAsync(key);
+    const raw = await AsyncStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;

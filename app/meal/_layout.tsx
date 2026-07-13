@@ -11,6 +11,7 @@ export default function MealLayout() {
       <Stack.Screen name="analyzing" />
       <Stack.Screen name="result" />
       <Stack.Screen name="food-detail" />
+      <Stack.Screen name="meal-detail" />
       <Stack.Screen name="history" />
     </Stack>
   );

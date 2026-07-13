@@ -5,9 +5,12 @@ import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useThemeContext } from "@/context/ThemeContext";
+import { useNutritionContext } from "@/context/NutritionContext";
 import { useMemo, useState } from "react";
-import { ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface FoodEntry {
   name: string;
@@ -32,10 +35,12 @@ const FOOD_DATABASE: FoodEntry[] = [
 const CATEGORIES = ["All", "Breakfast", "Lunch", "Dinner", "Snacks"];
 
 export default function FoodsScreen() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const { isDark, colors } = useThemeContext();
   const { handleScroll } = useTabBarVisibility();
+  const { mealHistory } = useNutritionContext();
   const insets = useSafeAreaInsets();
 
   const filteredFoods = useMemo(() => {
@@ -52,6 +57,15 @@ export default function FoodsScreen() {
 
     return result;
   }, [search, activeCategory]);
+
+  const loggedMeals = useMemo(() => {
+    let meals = mealHistory.meals;
+    if (activeCategory !== "All") {
+      const cat = activeCategory.toLowerCase();
+      meals = meals.filter((m) => m.type === cat || (cat === "snacks" && m.type === "snack"));
+    }
+    return meals;
+  }, [mealHistory.meals, activeCategory]);
 
   return (
     <SafeAreaView
@@ -109,6 +123,92 @@ export default function FoodsScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
         className="flex-1 px-4"
       >
+        {loggedMeals.length > 0 && (
+          <View className="mb-5">
+            <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+              <MaterialCommunityIcons name="history" size={18} color={colors.primary[500]} />
+              <Text
+                style={{ color: isDark ? colors.text.dark : colors.text.light }}
+                className="text-base font-black"
+              >
+                Logged Meals
+              </Text>
+            </View>
+            <View style={{ gap: 10 }}>
+              {loggedMeals.map((meal) => (
+                <TouchableOpacity
+                  key={meal.id}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/meal/meal-detail",
+                      params: { meal: JSON.stringify(meal) },
+                    });
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Card variant="outlined" className="py-3 px-4">
+                    <View className="flex-row items-center">
+                      {meal.imageUrl ? (
+                        <Image
+                          source={{ uri: meal.imageUrl }}
+                          style={{ width: 50, height: 50, borderRadius: 10, marginRight: 12 }}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                            width: 50, height: 50, borderRadius: 10, marginRight: 12,
+                            alignItems: "center", justifyContent: "center",
+                          }}
+                        >
+                          <MaterialCommunityIcons name="food-apple" size={24} color={colors.primary[500]} />
+                        </View>
+                      )}
+                      <View className="flex-1">
+                        <View className="flex-row items-center" style={{ gap: 6 }}>
+                          <Badge
+                            label={meal.type.charAt(0).toUpperCase() + meal.type.slice(1)}
+                            variant="primary"
+                            size="sm"
+                          />
+                          <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[400] }} className="text-[10px] font-semibold">
+                            {new Date(meal.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                          </Text>
+                        </View>
+                        <Text
+                          style={{ color: isDark ? colors.text.dark : colors.text.light }}
+                          className="text-sm font-bold mt-1"
+                          numberOfLines={1}
+                        >
+                          {meal.foods.map((f) => f.name).join(", ")}
+                        </Text>
+                        <View className="flex-row items-center mt-1" style={{ gap: 8 }}>
+                          <View className="flex-row items-center" style={{ gap: 2 }}>
+                            <MaterialCommunityIcons name="fire" size={12} color={colors.primary[500]} />
+                            <Text style={{ color: colors.primary[500] }} className="text-xs font-black">{meal.totalCalories} kcal</Text>
+                          </View>
+                          <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-[10px] font-semibold">{meal.foods.length} items</Text>
+                        </View>
+                      </View>
+                      <MaterialCommunityIcons name="chevron-right" size={20} color={isDark ? colors.text.secondary : colors.neutral[400]} />
+                    </View>
+                  </Card>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+          <MaterialCommunityIcons name="book-open-variant" size={18} color={isDark ? colors.text.secondary : colors.neutral[500]} />
+          <Text
+            style={{ color: isDark ? colors.text.dark : colors.text.light }}
+            className="text-base font-black"
+          >
+            Reference Database
+          </Text>
+        </View>
+
         {filteredFoods.length === 0 ? (
           <EmptyState
             title="No foods found"

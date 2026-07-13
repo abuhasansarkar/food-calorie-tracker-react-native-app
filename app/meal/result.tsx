@@ -155,9 +155,11 @@ export default function MealResultScreen() {
       proteinG: f.protein,
       carbsG: f.carbs,
       fatG: f.fat,
+      fiberG: f.fiber,
+      sugarG: f.sugar,
     }));
 
-    addMeal(selectedMealType, foodsToLog);
+    addMeal(selectedMealType, foodsToLog, imageUri || undefined);
     router.replace("/(tabs)/home");
   };
 
