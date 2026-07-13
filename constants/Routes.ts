@@ -26,6 +26,9 @@ export const Routes = {
   PROGRESS: "/(tabs)/progress",
   PROFILE: "/(tabs)/profile",
 
+  // Coach
+  COACH: "/(tabs)/coach",
+
   // Meal
   ANALYZING: "/meal/analyzing",
   MEAL_RESULT: "/meal/result",

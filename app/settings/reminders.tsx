@@ -1,26 +1,79 @@
-import { useState } from "react";
+import { useEffect, useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
 import { useThemeContext } from "@/context/ThemeContext";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useNotifications, MealTime } from "@/hooks/useNotifications";
 import { useRouter } from "expo-router";
 
-const MEAL_TIMES = [
-  { label: "Breakfast", time: "08:00" },
-  { label: "Lunch", time: "12:00" },
-  { label: "Dinner", time: "18:00" },
-  { label: "Snack", time: "15:00" },
-];
-
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const DAY_FULL: Record<string, string> = {
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
+};
+
+const FULL_TO_SHORT: Record<string, string> = {
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
+  Sunday: "Sun",
+};
 
 export default function RemindersScreen() {
   const router = useRouter();
   const { isDark, colors } = useThemeContext();
-  const [remindersEnabled, setRemindersEnabled] = useState(true);
-  const [selectedDay, setSelectedDay] = useState(0);
+  const { settings, updateSettings } = useSettingsStore();
+  const { init, scheduleAllMealReminders, cancelAllMealReminders, scheduleWeightReminder, cancelWeightReminder } = useNotifications();
+
+  const selectedDayIndex = DAYS.indexOf(FULL_TO_SHORT[settings.weightReminderDay] || "Mon");
+
+  useEffect(() => {
+    init();
+  }, [init]);
+
+  const getMealTimes = useCallback((): MealTime[] => [
+    { label: "Breakfast", id: "breakfast", hour: parseInt(settings.breakfastTime.split(":")[0], 10), minute: parseInt(settings.breakfastTime.split(":")[1], 10) },
+    { label: "Lunch", id: "lunch", hour: parseInt(settings.lunchTime.split(":")[0], 10), minute: parseInt(settings.lunchTime.split(":")[1], 10) },
+    { label: "Dinner", id: "dinner", hour: parseInt(settings.dinnerTime.split(":")[0], 10), minute: parseInt(settings.dinnerTime.split(":")[1], 10) },
+    { label: "Snack", id: "snack", hour: parseInt(settings.snackTime.split(":")[0], 10), minute: parseInt(settings.snackTime.split(":")[1], 10) },
+  ], [settings.breakfastTime, settings.lunchTime, settings.dinnerTime, settings.snackTime]);
+
+  const handleMealRemindersToggle = useCallback(async (v: boolean) => {
+    await updateSettings({ mealReminders: v });
+    if (v) {
+      await scheduleAllMealReminders(getMealTimes());
+    } else {
+      await cancelAllMealReminders();
+    }
+  }, [updateSettings, getMealTimes, scheduleAllMealReminders, cancelAllMealReminders]);
+
+  const handleDaySelect = useCallback(async (index: number) => {
+    const fullDay = DAY_FULL[DAYS[index]];
+    await updateSettings({ weightReminderDay: fullDay });
+    if (settings.weightReminders) {
+      await cancelWeightReminder(settings.weightReminderDay);
+      await scheduleWeightReminder(9, 0, fullDay);
+    }
+  }, [settings.weightReminders, settings.weightReminderDay, updateSettings, cancelWeightReminder, scheduleWeightReminder]);
+
+  const mealTimes: { label: string; time: string }[] = [
+    { label: "Breakfast", time: settings.breakfastTime },
+    { label: "Lunch", time: settings.lunchTime },
+    { label: "Dinner", time: settings.dinnerTime },
+    { label: "Snack", time: settings.snackTime },
+  ];
 
   return (
     <SafeAreaView
@@ -34,21 +87,20 @@ export default function RemindersScreen() {
         <Card variant="outlined" className="mb-4">
           <Toggle
             label="Enable Meal Reminders"
-            value={remindersEnabled}
-            onValueChange={setRemindersEnabled}
+            value={settings.mealReminders}
+            onValueChange={handleMealRemindersToggle}
           />
 
-          {remindersEnabled && (
+          {settings.mealReminders && (
             <View className="mt-4">
-              {MEAL_TIMES.map((meal, index) => (
-                <TouchableOpacity
+              {mealTimes.map((meal, index) => (
+                <View
                   key={meal.label}
                   className="flex-row items-center justify-between py-3.5"
                   style={{
-                    borderBottomWidth: index < MEAL_TIMES.length - 1 ? 1 : 0,
+                    borderBottomWidth: index < mealTimes.length - 1 ? 1 : 0,
                     borderBottomColor: isDark ? colors.border.dark : colors.border.light,
                   }}
-                  activeOpacity={0.7}
                 >
                   <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-semibold">
                     {meal.label}
@@ -59,7 +111,7 @@ export default function RemindersScreen() {
                     </Text>
                     <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[400] }}>›</Text>
                   </View>
-                </TouchableOpacity>
+                </View>
               ))}
             </View>
           )}
@@ -74,11 +126,11 @@ export default function RemindersScreen() {
           </Text>
           <View className="flex-row justify-between">
             {DAYS.map((day, index) => {
-              const isSelected = selectedDay === index;
+              const isSelected = selectedDayIndex === index;
               return (
                 <TouchableOpacity
                   key={day}
-                  onPress={() => setSelectedDay(index)}
+                  onPress={() => handleDaySelect(index)}
                   className="w-10 h-10 rounded-full items-center justify-center"
                   style={{
                     backgroundColor: isSelected

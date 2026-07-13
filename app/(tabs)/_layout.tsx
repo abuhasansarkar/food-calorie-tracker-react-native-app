@@ -66,7 +66,7 @@ function CustomTabBar({
     .sort((a, b) => tabOrder.indexOf(a.name) - tabOrder.indexOf(b.name));
 
   const activeRouteName = state.routes[state.index]?.name;
-  if (activeRouteName === "scan") {
+  if (activeRouteName === "scan" || activeRouteName === "coach") {
     return null;
   }
 
@@ -274,6 +274,12 @@ export default function TabLayout() {
           name="profile"
           options={{
             title: "Profile",
+          }}
+        />
+        <Tabs.Screen
+          name="coach"
+          options={{
+            href: null,
           }}
         />
       </Tabs>

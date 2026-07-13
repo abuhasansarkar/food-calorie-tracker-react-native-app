@@ -17,12 +17,12 @@ export const Config = {
   },
   storage: {
     keys: {
-      AUTH_TOKEN: "@aceky_auth_token",
-      USER_DATA: "@aceky_user_data",
-      ONBOARDING_DATA: "@aceky_onboarding_data",
-      THEME: "@aceky_theme",
-      SETTINGS: "@aceky_settings",
-      CALORIE_GOAL: "@aceky_calorie_goal",
+      AUTH_TOKEN: "aceky_auth_token",
+      USER_DATA: "aceky_user_data",
+      ONBOARDING_DATA: "aceky_onboarding_data",
+      THEME: "aceky_theme",
+      SETTINGS: "aceky_settings",
+      CALORIE_GOAL: "aceky_calorie_goal",
     },
   },
   pagination: {

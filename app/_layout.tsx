@@ -9,6 +9,7 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect } from "react";
 import { analyticsService } from "@/services/analytics";
+import { notificationService } from "@/services/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "../global.css";
 
@@ -36,8 +37,10 @@ if (
 export default function RootLayout() {
   useEffect(() => {
     analyticsService.startAutoFlush();
+    notificationService.init();
     return () => {
       analyticsService.destroy();
+      notificationService.cleanup();
     };
   }, []);
 

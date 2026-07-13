@@ -90,6 +90,16 @@ export default function HomeScreen() {
       <Header
         title={`Hi, ${displayName}`}
         subtitle="Ready to crush your goals today?"
+        rightAction={
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/coach")}
+            className="w-9 h-9 rounded-full items-center justify-center"
+            style={{ backgroundColor: colors.primary[500] }}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="robot" size={20} color={colors.black} />
+          </TouchableOpacity>
+        }
       />
 
       <ScrollView

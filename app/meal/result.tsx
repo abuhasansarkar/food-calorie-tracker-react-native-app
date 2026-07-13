@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { useThemeContext } from "@/context/ThemeContext";
 import { useNutritionContext } from "@/context/NutritionContext";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useNotifications } from "@/hooks/useNotifications";
 import { MealType, FoodItem } from "@/types/meal";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Loader } from "@/components/ui/Loader";
@@ -50,6 +52,8 @@ export default function MealResultScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
   const { isDark, colors } = useThemeContext();
   const { addMeal } = useNutritionContext();
+  const { settings } = useSettingsStore();
+  const { init: initNotifications, scheduleMealFollowUp } = useNotifications();
 
   // Basic states
   const [selectedMealType, setSelectedMealType] = useState<MealType>(MealType.Breakfast);
@@ -142,6 +146,11 @@ export default function MealResultScreen() {
     }));
 
     addMeal(selectedMealType, foodsToLog, imageUri || undefined);
+    if (settings.aiMealFollowUp) {
+      initNotifications().then(() => {
+        scheduleMealFollowUp(selectedMealType);
+      });
+    }
     router.replace("/(tabs)/home");
   };
 

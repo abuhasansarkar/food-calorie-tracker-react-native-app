@@ -8,6 +8,10 @@ export interface AppSettings {
   notificationsEnabled: boolean;
   mealReminders: boolean;
   reminderTime: string;
+  breakfastTime: string;
+  lunchTime: string;
+  dinnerTime: string;
+  snackTime: string;
   weightReminders: boolean;
   weightReminderDay: string;
   soundEnabled: boolean;
@@ -19,6 +23,7 @@ export interface AppSettings {
   streakAlerts: boolean;
   tipsAndTricks: boolean;
   promotions: boolean;
+  aiMealFollowUp: boolean;
   shareData: boolean;
 }
 
@@ -27,6 +32,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   notificationsEnabled: true,
   mealReminders: true,
   reminderTime: "08:00",
+  breakfastTime: "08:00",
+  lunchTime: "12:00",
+  dinnerTime: "18:00",
+  snackTime: "15:00",
   weightReminders: true,
   weightReminderDay: "Monday",
   soundEnabled: true,
@@ -38,6 +47,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   streakAlerts: true,
   tipsAndTricks: false,
   promotions: false,
+  aiMealFollowUp: false,
   shareData: false,
 };
 

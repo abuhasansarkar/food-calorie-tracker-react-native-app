@@ -405,6 +405,49 @@ Return ONLY this exact JSON structure with no markdown, no extra text:
     throw lastError || new Error("All text models failed for food search");
   }
 
+  async chat(
+    messages: { role: "system" | "user" | "assistant"; content: string }[],
+  ): Promise<string> {
+    const modelsToTry = [...TEXT_MODELS];
+    let lastError: any = null;
+
+    while (modelsToTry.length > 0) {
+      const modelIndex = Math.floor(Math.random() * modelsToTry.length);
+      const model = modelsToTry.splice(modelIndex, 1)[0];
+
+      try {
+        if (__DEV__) {
+          console.log(`[AIService] chat with model: ${model}`);
+        }
+
+        const payload = { model, messages };
+
+        const response = await fetch(OPENCODE_BASE_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENCODE_API_KEY}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Chat failed: ${response.status} ${errText}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+        return content;
+      } catch (error) {
+        console.error(`[AIService] Error in chat with ${model}:`, error);
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error("All models failed for chat");
+  }
+
   async getNutritionInfo(
     foodName: string,
     servingSize?: string,
