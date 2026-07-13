@@ -1,7 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { useThemeContext } from "@/context/ThemeContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const PLANS = [
   {
@@ -48,72 +52,136 @@ const PLANS = [
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const { isDark, colors } = useThemeContext();
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="px-6 pt-12 pb-6">
-        <Text className="text-3xl font-bold text-gray-900 text-center mb-2">
-          Unlock Premium
-        </Text>
-        <Text className="text-base text-gray-500 text-center">
-          Get the most out of your nutrition journey
-        </Text>
-      </View>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      className="flex-1"
+    >
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
-      <View className="px-6 gap-4 pb-8">
-        {PLANS.map((plan) => (
-          <Card
-            key={plan.tier}
-            variant={plan.popular ? "elevated" : "outlined"}
-            className={plan.popular ? "border-2 border-blue-500" : ""}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        className="flex-1"
+      >
+        {/* Header */}
+        <View className="px-6 pt-10 pb-6 items-center">
+          <View
+            style={{
+              backgroundColor: isDark ? "rgba(204, 255, 0, 0.08)" : "rgba(132, 204, 22, 0.08)",
+              borderColor: isDark ? "rgba(204, 255, 0, 0.2)" : "rgba(132, 204, 22, 0.2)",
+            }}
+            className="w-16 h-16 rounded-2xl items-center justify-center mb-5 border-2"
           >
-            {plan.popular && (
-              <View className="bg-blue-500 rounded-full px-3 py-1 self-start mb-3">
-                <Text className="text-white text-xs font-bold">
-                  MOST POPULAR
-                </Text>
-              </View>
-            )}
+            <MaterialCommunityIcons name="star" size={32} color={colors.primary[500]} />
+          </View>
 
-            <Text className="text-xl font-bold text-gray-900">
-              {plan.tier}
-            </Text>
-            <View className="flex-row items-baseline mt-2 mb-4">
-              <Text className="text-3xl font-bold text-gray-900">
-                {plan.price}
-              </Text>
-              <Text className="text-base text-gray-500 ml-1">
-                {plan.period}
-              </Text>
-            </View>
+          <Text
+            style={{ color: isDark ? colors.text.dark : colors.text.light }}
+            className="text-3xl font-extrabold tracking-tight text-center mb-2"
+          >
+            Unlock Premium
+          </Text>
+          <Text
+            style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+            className="text-base font-medium text-center max-w-[280px]"
+          >
+            Get the most out of your nutrition journey
+          </Text>
+        </View>
 
-            <View className="gap-3">
-              {plan.features.map((feature, index) => (
-                <View key={index} className="flex-row items-center gap-2">
-                  <Text className="text-green-500 text-lg">✓</Text>
-                  <Text className="text-sm text-gray-600">{feature}</Text>
+        {/* Plans */}
+        <View className="px-5 gap-4">
+          {PLANS.map((plan) => (
+            <Card
+              key={plan.tier}
+              variant={plan.popular ? "elevated" : "outlined"}
+              style={{
+                borderColor: plan.popular
+                  ? colors.primary[500]
+                  : isDark ? colors.border.dark : colors.border.light,
+                borderWidth: plan.popular ? 2 : 1,
+              }}
+              className="p-5"
+            >
+              {plan.popular && (
+                <View
+                  style={{ backgroundColor: colors.primary[500] }}
+                  className="rounded-full px-3 py-1.5 self-start mb-4"
+                >
+                  <Text className="text-black text-[10px] font-black tracking-wider">
+                    MOST POPULAR
+                  </Text>
                 </View>
-              ))}
-            </View>
+              )}
 
-            <View className="mt-4">
+              {/* Tier name + price */}
+              <View className="flex-row justify-between items-center mb-4">
+                <Text
+                  style={{ color: isDark ? colors.text.dark : colors.text.light }}
+                  className="text-xl font-black"
+                >
+                  {plan.tier}
+                </Text>
+                <View className="flex-row items-baseline">
+                  <Text
+                    style={{ color: colors.primary[500] }}
+                    className="text-2xl font-black tracking-tight"
+                  >
+                    {plan.price}
+                  </Text>
+                  <Text
+                    style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+                    className="text-sm font-bold ml-1"
+                  >
+                    {plan.period}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Features list */}
+              <View className="gap-2.5 mb-5">
+                {plan.features.map((feature, index) => (
+                  <View key={index} className="flex-row items-center gap-2.5">
+                    <MaterialCommunityIcons
+                      name="check-circle"
+                      size={16}
+                      color={colors.primary[500]}
+                    />
+                    <Text
+                      style={{ color: isDark ? colors.text.secondary : colors.neutral[600] }}
+                      className="text-sm font-semibold"
+                    >
+                      {feature}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
               <Button
                 title={plan.tier === "Free" ? "Continue Free" : `Subscribe to ${plan.tier}`}
                 onPress={() => router.replace("/(tabs)/home")}
                 variant={plan.popular ? "primary" : "outline"}
                 fullWidth
               />
-            </View>
-          </Card>
-        ))}
-      </View>
+            </Card>
+          ))}
+        </View>
 
-      <TouchableOpacity
-        onPress={() => router.replace("/(tabs)/home")}
-        className="items-center pb-8"
-      >
-        <Text className="text-sm text-gray-500">Restore Purchases</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Restore Purchases */}
+        <TouchableOpacity
+          onPress={() => router.replace("/(tabs)/home")}
+          className="items-center py-8"
+        >
+          <Text
+            style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+            className="text-sm font-semibold"
+          >
+            Restore Purchases
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

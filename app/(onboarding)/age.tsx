@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -29,11 +30,22 @@ export default function AgeScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      <Header title="" onBack={() => router.back()} />
+      <Header
+        title=""
+        onBack={() => router.back()}
+        rightAction={
+          <Text
+            style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+            className="text-sm font-semibold tracking-wider"
+          >
+            2 of 8
+          </Text>
+        }
+      />
 
       <View className="flex-1 px-6 justify-center">
         <View className="mb-8">

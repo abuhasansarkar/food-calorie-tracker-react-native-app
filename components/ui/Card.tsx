@@ -1,8 +1,9 @@
-import { View } from "react-native";
 import { useThemeContext } from "@/context/ThemeContext";
 import { radius } from "@/theme/radius";
-import { spacing } from "@/theme/spacing";
 import { shadows } from "@/theme/shadows";
+import { spacing } from "@/theme/spacing";
+import React from "react";
+import { View } from "react-native";
 
 interface CardProps {
   children: React.ReactNode;

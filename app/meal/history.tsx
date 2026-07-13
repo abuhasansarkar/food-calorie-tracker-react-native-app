@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -56,8 +57,8 @@ export default function MealHistoryScreen() {
   if (MEAL_HISTORY.length === 0) {
     return (
       <SafeAreaView
-        style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
-        className="flex-1"
+        style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+        className="flex-1 items-center justify-center"
       >
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <Header title="Meal History" onBack={() => router.back()} />
@@ -71,7 +72,7 @@ export default function MealHistoryScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />

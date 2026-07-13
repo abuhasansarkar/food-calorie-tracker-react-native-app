@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { colors } from "@/theme/colors";
+import { useThemeContext } from "@/context/ThemeContext";
 import { spacing } from "@/theme/spacing";
 
 interface EmptyStateProps {
@@ -17,6 +17,8 @@ export function EmptyState({
   action,
   className = "",
 }: EmptyStateProps) {
+  const { isDark, colors } = useThemeContext();
+
   return (
     <View
       className={`items-center justify-center py-16 px-8 ${className}`}
@@ -27,7 +29,7 @@ export function EmptyState({
             width: 80,
             height: 80,
             borderRadius: 40,
-            backgroundColor: colors.primary[50],
+            backgroundColor: isDark ? "rgba(204, 255, 0, 0.08)" : colors.primary[50],
             justifyContent: "center",
             alignItems: "center",
             marginBottom: spacing.xl,
@@ -41,7 +43,7 @@ export function EmptyState({
         style={{
           fontSize: 18,
           fontWeight: "600",
-          color: colors.neutral[900],
+          color: isDark ? colors.text.dark : colors.neutral[900],
           textAlign: "center",
           marginBottom: spacing.sm,
         }}
@@ -53,7 +55,7 @@ export function EmptyState({
         <Text
           style={{
             fontSize: 14,
-            color: colors.neutral[500],
+            color: isDark ? colors.text.secondary : colors.neutral[500],
             textAlign: "center",
             lineHeight: 20,
             marginBottom: spacing.xl,

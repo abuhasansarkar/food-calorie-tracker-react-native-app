@@ -1,9 +1,9 @@
 import { useCallback } from "react";
-import { useProgressStore } from "@/store/progressStore";
+import { useProgressContext } from "@/context/ProgressContext";
 import { WeeklyProgress, MonthlyProgress } from "@/types/progress";
 
 export function useWeight() {
-  const store = useProgressStore();
+  const store = useProgressContext();
 
   const addWeight = useCallback(
     (weightKg: number, notes?: string) => {

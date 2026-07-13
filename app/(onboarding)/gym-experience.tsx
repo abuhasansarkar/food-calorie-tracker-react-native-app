@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StatusBar, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
@@ -42,7 +43,7 @@ export default function GymExperienceScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
@@ -54,7 +55,7 @@ export default function GymExperienceScreen() {
             style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
             className="text-sm font-semibold tracking-wider"
           >
-            6 of 7
+            7 of 8
           </Text>
         }
       />

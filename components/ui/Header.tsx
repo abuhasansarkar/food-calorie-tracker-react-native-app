@@ -1,6 +1,7 @@
-import { View, Text, TouchableOpacity } from "react-native";
 import { useThemeContext } from "@/context/ThemeContext";
 import { spacing } from "@/theme/spacing";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 interface HeaderProps {
   title: string;
@@ -26,15 +27,19 @@ export function Header({
       className={`flex-row items-center justify-between px-4 py-3 ${className}`}
     >
       <View className="flex-row items-center gap-3 flex-1">
-        {leftAction || (
-          onBack && (
+        {leftAction ||
+          (onBack && (
             <TouchableOpacity onPress={onBack} style={{ padding: spacing.xs }}>
-              <Text style={{ fontSize: 24, color: isDark ? colors.text.dark : colors.neutral[700] }}>
+              <Text
+                style={{
+                  fontSize: 24,
+                  color: isDark ? colors.text.dark : colors.neutral[700],
+                }}
+              >
                 ←
               </Text>
             </TouchableOpacity>
-          )
-        )}
+          ))}
 
         <View className="flex-1">
           <Text
@@ -62,9 +67,7 @@ export function Header({
         </View>
       </View>
 
-      {rightAction && (
-        <View className="ml-auto">{rightAction}</View>
-      )}
+      {rightAction && <View className="ml-auto">{rightAction}</View>}
     </View>
   );
 }

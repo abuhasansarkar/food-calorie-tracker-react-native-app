@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Loader } from "@/components/ui/Loader";
 import { useThemeContext } from "@/context/ThemeContext";
@@ -28,7 +29,7 @@ export default function AnalyzingScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1 justify-center px-6"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />

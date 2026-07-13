@@ -1,9 +1,11 @@
 import { NutritionProvider } from "@/context/NutritionContext";
+import { ProgressProvider } from "@/context/ProgressContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { UserProvider } from "@/context/UserContext";
 import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { Stack } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -30,24 +32,28 @@ if (
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ThemeProvider>
-        <UserProvider>
-          <NutritionProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(onboarding)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="meal" />
-              <Stack.Screen name="settings" />
-            </Stack>
-          </NutritionProvider>
-        </UserProvider>
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <UserProvider>
+            <NutritionProvider>
+              <ProgressProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(onboarding)" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="meal" />
+                  <Stack.Screen name="settings" />
+                </Stack>
+              </ProgressProvider>
+            </NutritionProvider>
+          </UserProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </ClerkProvider>
   );
 }

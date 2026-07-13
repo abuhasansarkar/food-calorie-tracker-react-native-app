@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
@@ -23,13 +24,13 @@ export default function RemindersScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header title="Meal Reminders" onBack={() => router.back()} />
 
-      <View className="px-4 mt-4">
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} className="flex-1 px-4 mt-4">
         <Card variant="outlined" className="mb-4">
           <Toggle
             label="Enable Meal Reminders"
@@ -104,7 +105,7 @@ export default function RemindersScreen() {
             })}
           </View>
         </Card>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -1,15 +1,17 @@
 import { Button } from "@/components/ui/Button";
-import { colors } from "@/theme/colors";
 import { endGuestSession } from "@/utils/guest";
 import { useClerk, useSignUp } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useThemeContext } from "@/context/ThemeContext";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
   const { signUp } = useSignUp();
   const clerk = useClerk();
+  const { isDark, colors } = useThemeContext();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,86 +83,116 @@ export default function VerifyEmailScreen() {
 
   if (!signUp) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-500">Loading...</Text>
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
+        <View 
+          style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+          className="flex-1 items-center justify-center"
+        >
+          <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}>Loading...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!signUp.status || signUp.status === "complete") {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-6">
-        <Text className="text-xl font-bold text-gray-900 mb-2">
-          No Pending Verification
-        </Text>
-        <Text className="text-base text-gray-500 text-center mb-6">
-          You don&apos;t have a pending email verification. Please sign up
-          first.
-        </Text>
-        <Button
-          title="Go to Sign Up"
-          onPress={() => router.replace("/(auth)/register")}
-          size="lg"
-          fullWidth
-        />
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
+        <View 
+          style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+          className="flex-1 items-center justify-center px-6"
+        >
+          <Text 
+            style={{ color: isDark ? colors.text.dark : colors.text.light }}
+            className="text-xl font-bold mb-2"
+          >
+            No Pending Verification
+          </Text>
+          <Text 
+            style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+            className="text-base text-center mb-6"
+          >
+            You don&apos;t have a pending email verification. Please sign up
+            first.
+          </Text>
+          <Button
+            title="Go to Sign Up"
+            onPress={() => router.replace("/(auth)/register")}
+            size="lg"
+            fullWidth
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View className="flex-1 px-6 justify-center bg-white">
-      <Text className="text-3xl font-bold text-gray-900 mb-2">
-        Verify Email
-      </Text>
-      <Text className="text-base text-gray-500 mb-8">
-        Enter the 6-digit code sent to your email
-      </Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
+      <View 
+        style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+        className="flex-1 px-6 justify-center"
+      >
+        <Text 
+          style={{ color: isDark ? colors.text.dark : colors.text.light }}
+          className="text-3xl font-bold mb-2"
+        >
+          Verify Email
+        </Text>
+        <Text 
+          style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+          className="text-base mb-8"
+        >
+          Enter the 6-digit code sent to your email
+        </Text>
 
-      <View className="flex-row justify-center gap-3 mb-6">
-        {code.map((digit, index) => (
-          <TextInput
-            key={index}
-            ref={(ref) => {
-              inputRefs.current[index] = ref;
-            }}
-            value={digit}
-            onChangeText={(text) => handleCodeChange(text, index)}
-            onKeyPress={({ nativeEvent }) =>
-              handleKeyPress(nativeEvent.key, index)
-            }
-            keyboardType="number-pad"
-            maxLength={1}
-            style={{
-              width: 48,
-              height: 56,
-              borderWidth: 1,
-              borderRadius: 8,
-              textAlign: "center",
-              fontSize: 20,
-              fontWeight: "700",
-              color: colors.neutral[900],
-              borderColor: digit ? colors.primary[500] : colors.neutral[300],
-            }}
-          />
-        ))}
+        <View className="flex-row justify-center gap-3 mb-6">
+          {code.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={(ref) => {
+                inputRefs.current[index] = ref;
+              }}
+              value={digit}
+              onChangeText={(text) => handleCodeChange(text, index)}
+              onKeyPress={({ nativeEvent }) =>
+                handleKeyPress(nativeEvent.key, index)
+              }
+              keyboardType="number-pad"
+              maxLength={1}
+              style={{
+                width: 48,
+                height: 56,
+                borderWidth: 1,
+                borderRadius: 8,
+                textAlign: "center",
+                fontSize: 20,
+                fontWeight: "700",
+                color: isDark ? colors.text.dark : colors.text.light,
+                borderColor: digit
+                  ? colors.primary[500]
+                  : (isDark ? colors.border.dark : colors.border.light),
+                backgroundColor: isDark ? colors.surface.dark : colors.white,
+              }}
+            />
+          ))}
+        </View>
+
+        {error && (
+          <Text className="text-sm text-red-500 text-center mb-4">{error}</Text>
+        )}
+
+        <Button
+          title="Verify"
+          onPress={handleVerify}
+          loading={loading}
+          disabled={loading || code.join("").length !== 6}
+          size="lg"
+          fullWidth
+        />
+
+        <TouchableOpacity className="mt-4 items-center" onPress={handleResend}>
+          <Text style={{ color: colors.primary[500] }} className="text-sm font-bold">Resend Code</Text>
+        </TouchableOpacity>
       </View>
-
-      {error && (
-        <Text className="text-sm text-red-500 text-center mb-4">{error}</Text>
-      )}
-
-      <Button
-        title="Verify"
-        onPress={handleVerify}
-        loading={loading}
-        disabled={loading || code.join("").length !== 6}
-        size="lg"
-        fullWidth
-      />
-
-      <TouchableOpacity className="mt-4 items-center" onPress={handleResend}>
-        <Text className="text-sm text-blue-600">Resend Code</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }

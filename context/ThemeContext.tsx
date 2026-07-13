@@ -1,7 +1,8 @@
 import { createContext, useContext, ReactNode, useState, useMemo, useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { useColorScheme, ActivityIndicator, View } from "react-native";
 import { useColorScheme as useNativewindColorScheme } from "nativewind";
 import { colors } from "@/theme/colors";
+import * as SecureStore from "expo-secure-store";
 
 type ThemeMode = "light" | "dark" | "system";
 
@@ -14,11 +15,30 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const THEME_STORE_KEY = "aceky_theme_mode";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   const { setColorScheme } = useNativewindColorScheme();
-  const [mode, setMode] = useState<ThemeMode>("system");
+  const [mode, setModeState] = useState<ThemeMode>("system");
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Load persisted theme preference
+    async function loadTheme() {
+      try {
+        const savedMode = await SecureStore.getItemAsync(THEME_STORE_KEY);
+        if (savedMode === "light" || savedMode === "dark" || savedMode === "system") {
+          setModeState(savedMode);
+        }
+      } catch (error) {
+        console.error("Failed to load theme preference from SecureStore", error);
+      } finally {
+        setIsLoaded(true);
+      }
+    }
+    loadTheme();
+  }, []);
 
   const isDark = useMemo(() => {
     if (mode === "system") return systemScheme === "dark";
@@ -29,12 +49,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setColorScheme(isDark ? "dark" : "light");
   }, [isDark, setColorScheme]);
 
-  const toggleTheme = () => {
-    setMode((prev) => {
-      if (prev === "system") return isDark ? "light" : "dark";
-      return prev === "dark" ? "light" : "dark";
-    });
+  const setMode = async (newMode: ThemeMode) => {
+    try {
+      setModeState(newMode);
+      await SecureStore.setItemAsync(THEME_STORE_KEY, newMode);
+    } catch (error) {
+      console.error("Failed to save theme preference to SecureStore", error);
+    }
   };
+
+  const toggleTheme = async () => {
+    const nextMode = isDark ? "light" : "dark";
+    await setMode(nextMode);
+  };
+
+  // Prevent flash or layout shifts before initial theme selection is resolved
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: "#F8F9FA" }}>
+        <ActivityIndicator size="large" color={colors.primary[500]} />
+      </View>
+    );
+  }
 
   return (
     <ThemeContext.Provider

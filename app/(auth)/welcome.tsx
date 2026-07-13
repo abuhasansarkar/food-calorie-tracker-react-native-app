@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/Button";
 import { startGuestSession } from "@/utils/guest";
 import { useAuth } from "@clerk/expo";
 import { useRouter } from "expo-router";
-import { Text, View, StatusBar, SafeAreaView, TouchableOpacity } from "react-native";
+import { Text, View, StatusBar, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeContext } from "@/context/ThemeContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -22,7 +23,7 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView 
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />

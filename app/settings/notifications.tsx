@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, SafeAreaView, StatusBar } from "react-native";
+import { View, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Toggle } from "@/components/ui/Toggle";
 import { Card } from "@/components/ui/Card";
@@ -19,13 +20,13 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header title="Notifications" onBack={() => router.back()} />
 
-      <View className="px-4 mt-4">
+      <ScrollView contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 16 }} className="flex-1 mt-4">
         <Card variant="outlined">
           <Toggle
             label="Meal Reminders"
@@ -68,7 +69,7 @@ export default function NotificationsScreen() {
             }
           />
         </Card>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

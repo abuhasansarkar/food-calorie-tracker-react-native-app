@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, SafeAreaView, StatusBar, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import { View, Text, ScrollView, StatusBar, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
@@ -80,7 +81,7 @@ export default function GoalWeightScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
@@ -92,7 +93,7 @@ export default function GoalWeightScreen() {
             style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
             className="text-sm font-semibold tracking-wider"
           >
-            4 of 7
+            5 of 8
           </Text>
         }
       />

@@ -1,20 +1,55 @@
-import { Tabs, Redirect } from "expo-router";
-import { View, ActivityIndicator, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
-import { useAuth } from "@clerk/expo";
+import {
+  TabBarVisibilityProvider,
+  useTabBarVisibility,
+} from "@/context/TabBarVisibilityContext";
 import { useThemeContext } from "@/context/ThemeContext";
-import { useEffect, useState } from "react";
 import { isGuestSession } from "@/utils/guest";
+import { useAuth } from "@clerk/expo";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { Redirect, Tabs } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface CustomTabBarProps extends BottomTabBarProps {
   colors: any;
   isDark: boolean;
 }
 
-function CustomTabBar({ state, descriptors, navigation, colors, isDark }: CustomTabBarProps) {
+function CustomTabBar({
+  state,
+  descriptors,
+  navigation,
+  colors,
+  isDark,
+}: CustomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { isTabBarVisible } = useTabBarVisibility();
+
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    translateY.value = withTiming(isTabBarVisible ? 0 : 120, { duration: 250 });
+  }, [isTabBarVisible]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
   const iconConfig: Record<string, { active: string; inactive: string }> = {
     home: { active: "home", inactive: "home-outline" },
@@ -31,8 +66,14 @@ function CustomTabBar({ state, descriptors, navigation, colors, isDark }: Custom
     .filter((route) => tabOrder.includes(route.name))
     .sort((a, b) => tabOrder.indexOf(a.name) - tabOrder.indexOf(b.name));
 
+  // Hide the tab bar completely on the scan/camera screen
+  const activeRoute = state.routes[state.index];
+  if (activeRoute?.name === "scan") {
+    return null;
+  }
+
   return (
-    <View
+    <Animated.View
       style={[
         styles.tabBarContainer,
         {
@@ -40,6 +81,7 @@ function CustomTabBar({ state, descriptors, navigation, colors, isDark }: Custom
           borderColor: isDark ? "#24262B" : "#E5E7EB",
           bottom: Platform.OS === "ios" ? Math.max(insets.bottom, 16) : 16,
         },
+        animatedStyle,
       ]}
     >
       {renderedRoutes.map((route) => {
@@ -51,8 +93,8 @@ function CustomTabBar({ state, descriptors, navigation, colors, isDark }: Custom
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-            ? options.title
-            : route.name;
+              ? options.title
+              : route.name;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -87,10 +129,21 @@ function CustomTabBar({ state, descriptors, navigation, colors, isDark }: Custom
               style={styles.scanTabButton}
               activeOpacity={0.85}
             >
-              <View style={[styles.scanCircle, { backgroundColor: activeColor }]}>
-                <MaterialCommunityIcons name="view-finder" size={28} color="#000000" />
+              <View
+                style={[styles.scanCircle, { backgroundColor: activeColor }]}
+              >
+                <MaterialCommunityIcons
+                  name="view-finder"
+                  size={28}
+                  color="#000000"
+                />
               </View>
-              <Text style={[styles.scanText, { color: isFocused ? activeColor : inactiveColor }]}>
+              <Text
+                style={[
+                  styles.scanText,
+                  { color: isFocused ? activeColor : inactiveColor },
+                ]}
+              >
                 Scan
               </Text>
             </TouchableOpacity>
@@ -156,7 +209,7 @@ function CustomTabBar({ state, descriptors, navigation, colors, isDark }: Custom
           </TouchableOpacity>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -172,7 +225,11 @@ export default function TabLayout() {
   if (!isLoaded || isGuest === null) {
     return (
       <View
-        style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+        style={{
+          backgroundColor: isDark
+            ? colors.background.dark
+            : colors.background.light,
+        }}
         className="flex-1 items-center justify-center"
       >
         <ActivityIndicator size="large" color={colors.primary[500]} />
@@ -185,43 +242,47 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      tabBar={(props) => <CustomTabBar {...props} colors={colors} isDark={isDark} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "Home",
+    <TabBarVisibilityProvider>
+      <Tabs
+        tabBar={(props) => (
+          <CustomTabBar {...props} colors={colors} isDark={isDark} />
+        )}
+        screenOptions={{
+          headerShown: false,
         }}
-      />
-      <Tabs.Screen
-        name="foods"
-        options={{
-          title: "Foods",
-        }}
-      />
-      <Tabs.Screen
-        name="scan"
-        options={{
-          title: "Scan",
-        }}
-      />
-      <Tabs.Screen
-        name="progress"
-        options={{
-          title: "Progress",
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: "Home",
+          }}
+        />
+        <Tabs.Screen
+          name="foods"
+          options={{
+            title: "Foods",
+          }}
+        />
+        <Tabs.Screen
+          name="scan"
+          options={{
+            title: "Scan",
+          }}
+        />
+        <Tabs.Screen
+          name="progress"
+          options={{
+            title: "Progress",
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+          }}
+        />
+      </Tabs>
+    </TabBarVisibilityProvider>
   );
 }
 

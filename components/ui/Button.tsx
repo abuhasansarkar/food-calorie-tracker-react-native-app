@@ -1,7 +1,8 @@
-import { TouchableOpacity, Text, ActivityIndicator, View } from "react-native";
 import { useThemeContext } from "@/context/ThemeContext";
 import { radius } from "@/theme/radius";
 import { spacing } from "@/theme/spacing";
+import React from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 interface ButtonProps {
   title: string;
@@ -72,12 +73,20 @@ export function Button({
       disabled={disabled || loading}
       className={`items-center justify-center flex-row ${fullWidth ? "w-full" : ""} ${className}`}
       style={{
-        backgroundColor: disabled ? (isDark ? colors.neutral[800] : colors.neutral[200]) : currentVariant.bg,
+        backgroundColor: disabled
+          ? isDark
+            ? colors.neutral[800]
+            : colors.neutral[200]
+          : currentVariant.bg,
         paddingVertical: currentSize.py,
         paddingHorizontal: currentSize.px,
         borderRadius: radius.lg,
-        borderWidth: (variant === "outline" || variant === "secondary") ? 1.5 : 0,
-        borderColor: disabled ? (isDark ? colors.neutral[800] : colors.neutral[200]) : currentVariant.border,
+        borderWidth: variant === "outline" || variant === "secondary" ? 1.5 : 0,
+        borderColor: disabled
+          ? isDark
+            ? colors.neutral[800]
+            : colors.neutral[200]
+          : currentVariant.border,
         opacity: disabled ? 0.6 : 1,
       }}
       activeOpacity={0.8}

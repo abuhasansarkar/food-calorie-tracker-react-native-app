@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { useThemeContext } from "@/context/ThemeContext";
@@ -17,13 +18,13 @@ export default function AppearanceScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header title="Appearance" onBack={() => router.back()} />
 
-      <View className="px-4 mt-4">
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} className="flex-1 px-4 mt-4">
         <Card variant="outlined">
           <Text 
             style={{ color: isDark ? colors.text.dark : colors.text.light }}
@@ -54,7 +55,6 @@ export default function AppearanceScreen() {
                     name={theme.icon}
                     size={22}
                     color={isSelected ? colors.primary[500] : (isDark ? colors.text.secondary : colors.neutral[500])}
-                    className="mr-3"
                   />
                   <Text
                     style={{
@@ -63,7 +63,7 @@ export default function AppearanceScreen() {
                         : (isDark ? colors.text.dark : colors.neutral[800]),
                       fontWeight: isSelected ? "700" : "500",
                     }}
-                    className="text-base flex-1 ml-2"
+                    className="text-base flex-1 ml-3"
                   >
                     {theme.label}
                   </Text>
@@ -75,7 +75,7 @@ export default function AppearanceScreen() {
             })}
           </View>
         </Card>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

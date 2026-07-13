@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
@@ -28,7 +29,7 @@ export default function GenderScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
@@ -40,7 +41,7 @@ export default function GenderScreen() {
             style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
             className="text-sm font-semibold tracking-wider"
           >
-            1 of 7
+            1 of 8
           </Text>
         }
       />

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Toggle } from "@/components/ui/Toggle";
 import { Card } from "@/components/ui/Card";
@@ -17,13 +18,13 @@ export default function PrivacyScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header title="Privacy" onBack={() => router.back()} />
 
-      <View className="px-4 mt-4">
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} className="flex-1 px-4 mt-4">
         <Card variant="outlined" className="mb-4">
           <Toggle
             label="Analytics"
@@ -61,7 +62,7 @@ export default function PrivacyScreen() {
             Privacy Policy.
           </Text>
         </Card>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

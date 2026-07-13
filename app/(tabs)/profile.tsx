@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
@@ -7,6 +7,8 @@ import { Header } from "@/components/ui/Header";
 import { useUserContext } from "@/context/UserContext";
 import { useThemeContext } from "@/context/ThemeContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 
 const MENU_ITEMS = [
   { title: "Notifications", route: "/settings/notifications", icon: "bell-outline" },
@@ -20,6 +22,8 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, onboardingData, isGuest, logout } = useUserContext();
   const { isDark, colors } = useThemeContext();
+  const { handleScroll } = useTabBarVisibility();
+  const insets = useSafeAreaInsets();
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
@@ -41,13 +45,19 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light }}
+      style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}
       className="flex-1"
+      edges={["top", "left", "right"]}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header title="Profile" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} className="flex-1 px-4">
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
+        className="flex-1 px-4"
+      >
         {/* User Card */}
         <Card variant="outlined" className="flex-row items-center mb-4 p-4">
           <Avatar
@@ -106,7 +116,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             
-            <View className="items-center flex-1 border-x border-neutral-150 dark:border-neutral-850">
+            <View className="items-center flex-1 border-x border-neutral-200 dark:border-neutral-800">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-black">
                 {onboardingData?.heightCm ? `${onboardingData.heightCm} cm` : "175 cm"}
               </Text>
@@ -115,7 +125,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             
-            <View className="items-center flex-1 border-r border-neutral-150 dark:border-neutral-850">
+            <View className="items-center flex-1 border-r border-neutral-200 dark:border-neutral-800">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-black">
                 {onboardingData?.weightKg ? `${onboardingData.weightKg} kg` : "55 kg"}
               </Text>
@@ -143,7 +153,7 @@ export default function ProfileScreen() {
               return (
                 <TouchableOpacity
                   key={item.title}
-                  onPress={() => Alert.alert(item.title, "Feature coming soon!")}
+                  onPress={() => router.push(item.route as any)}
                   style={{
                     borderBottomWidth: isLast ? 0 : 1,
                     borderBottomColor: isDark ? colors.border.dark : "rgba(0,0,0,0.05)",
