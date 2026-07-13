@@ -54,7 +54,7 @@ function CustomTabBar({
   const iconConfig: Record<string, { active: string; inactive: string }> = {
     home: { active: "home", inactive: "home-outline" },
     foods: { active: "food-apple", inactive: "food-apple-outline" },
-    scan: { active: "viewfinder", inactive: "viewfinder" },
+    scan: { active: "camera-iris", inactive: "camera-iris" },
     progress: { active: "chart-bar", inactive: "chart-bar" },
     profile: { active: "account", inactive: "account-outline" },
   };
@@ -131,7 +131,7 @@ function CustomTabBar({
                 style={[styles.scanCircle, { backgroundColor: activeColor }]}
               >
                 <MaterialCommunityIcons
-                  name="viewfinder"
+                  name="camera-iris"
                   size={28}
                   color="#000000"
                 />

@@ -103,9 +103,9 @@ export default function RegisterScreen() {
     setErrors({});
 
     try {
-      const { createdSessionId } = await startSSOFlow({ strategy });
+      const flow = await startSSOFlow({ strategy });
 
-      if (!createdSessionId) {
+      if (!flow.createdSessionId) {
         setErrors({
           general: "SSO failed to create a session. Please try again.",
         });
@@ -113,11 +113,11 @@ export default function RegisterScreen() {
       }
 
       await endGuestSession();
-      await clerk.setActive({ session: createdSessionId });
+      await clerk.setActive({ session: flow.createdSessionId });
 
       router.replace("/(onboarding)/gender");
     } catch (e: unknown) {
-      const err = e as { errors?: Array<{ message: string }>; message?: string };
+      const err = e as { errors?: { message: string }[]; message?: string };
       setErrors({
         general: err?.errors?.[0]?.message || err?.message || "SSO sign up failed",
       });

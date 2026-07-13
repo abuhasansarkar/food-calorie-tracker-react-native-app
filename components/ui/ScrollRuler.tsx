@@ -16,7 +16,7 @@ const ITEM_WIDTH = 12;
 export function ScrollRuler({ minValue, maxValue, defaultValue, unit, onValueChange }: ScrollRulerProps) {
   const { isDark, colors } = useThemeContext();
   const initialValue = defaultValue || minValue;
-  const [selectedValue, setSelectedValue] = useState(initialValue);
+  const [, setSelectedValue] = useState(initialValue);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const totalTicks = maxValue - minValue + 1;

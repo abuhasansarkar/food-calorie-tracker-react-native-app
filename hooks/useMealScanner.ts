@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { aiService } from "@/services/ai";
 import { ScanResult, FoodItem } from "@/types/meal";
 import { analyticsService } from "@/services/analytics";
@@ -13,6 +13,12 @@ export function useMealScanner(options: UseMealScannerOptions = {}) {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Use ref to avoid stale closure over options
+  const optionsRef = useRef(options);
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
+
   const scanImage = useCallback(
     async (imageUri: string) => {
       setIsScanning(true);
@@ -26,19 +32,19 @@ export function useMealScanner(options: UseMealScannerOptions = {}) {
           result.foods.length,
           result.confidence
         );
-        options.onScanComplete?.(result);
+        optionsRef.current.onScanComplete?.(result);
         return result;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to analyze image";
         setError(message);
-        options.onScanError?.(err instanceof Error ? err : new Error(message));
+        optionsRef.current.onScanError?.(err instanceof Error ? err : new Error(message));
         return null;
       } finally {
         setIsScanning(false);
       }
     },
-    [options]
+    []
   );
 
   const searchFood = useCallback(async (query: string): Promise<FoodItem[]> => {

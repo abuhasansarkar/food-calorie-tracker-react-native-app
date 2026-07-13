@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { storageService } from "@/services/storage";
 import { Config } from "@/constants/Config";
 
@@ -43,6 +43,10 @@ interface SettingsStore {
 export function useSettingsStore(): SettingsStore {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true);

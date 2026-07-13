@@ -10,6 +10,9 @@ interface UseCaloriesOptions {
   activityLevel: ActivityLevel;
   goalType: GoalType;
   consumedCalories?: number;
+  consumedProtein?: number;
+  consumedCarbs?: number;
+  consumedFat?: number;
   burnedCalories?: number;
 }
 
@@ -53,11 +56,11 @@ export function useCalories(options: UseCaloriesOptions) {
 
   const macroProgress = useMemo(
     () => ({
-      protein: calorieService.getMacroProgress(options.consumedCalories || 0, requirements.proteinG),
-      carbs: calorieService.getMacroProgress(options.consumedCalories || 0, requirements.carbsG),
-      fat: calorieService.getMacroProgress(options.consumedCalories || 0, requirements.fatG),
+      protein: calorieService.getMacroProgress(options.consumedProtein || 0, requirements.proteinG),
+      carbs: calorieService.getMacroProgress(options.consumedCarbs || 0, requirements.carbsG),
+      fat: calorieService.getMacroProgress(options.consumedFat || 0, requirements.fatG),
     }),
-    [options.consumedCalories, requirements.proteinG, requirements.carbsG, requirements.fatG]
+    [options.consumedProtein, options.consumedCarbs, options.consumedFat, requirements.proteinG, requirements.carbsG, requirements.fatG]
   );
 
   return {

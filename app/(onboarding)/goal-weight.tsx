@@ -43,7 +43,7 @@ export default function GoalWeightScreen() {
       <View className="flex-1 justify-center">
         <View className="px-6 mb-12">
           <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-3xl font-extrabold tracking-tight mb-2 text-center">
-            What's your goal weight?
+            What&apos;s your goal weight?
           </Text>
           <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-base font-medium text-center">
             Where do you want to be?

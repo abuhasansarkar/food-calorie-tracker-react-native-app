@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+
 import { useThemeContext } from "@/context/ThemeContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 

@@ -6,7 +6,7 @@ export const Config = {
     scheme: "acekyai",
   },
   api: {
-    baseUrl: process.env.EXPO_PUBLIC_API_URL || "https://api.acekyai.com",
+    baseUrl: process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? "http://localhost:3000" : "https://api.acekyai.com"),
     timeout: 30000,
     retries: 3,
   },

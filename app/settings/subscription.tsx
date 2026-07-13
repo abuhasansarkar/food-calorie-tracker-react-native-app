@@ -133,6 +133,7 @@ export default function SubscriptionScreen() {
             ) : (
               <Button
                 title="Current Plan"
+                onPress={() => {}}
                 disabled
                 fullWidth
               />

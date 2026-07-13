@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, ScrollView, StatusBar } from "react-native";
+import { ScrollView, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Toggle } from "@/components/ui/Toggle";

@@ -1,28 +1,30 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useProgressContext } from "@/context/ProgressContext";
 import { WeeklyProgress, MonthlyProgress } from "@/types/progress";
 
 export function useWeight() {
   const store = useProgressContext();
+  const storeRef = useRef(store);
+  storeRef.current = store;
 
   const addWeight = useCallback(
     (weightKg: number, notes?: string) => {
-      store.addWeightEntry(weightKg, notes);
+      storeRef.current.addWeightEntry(weightKg, notes);
     },
-    [store],
+    [],
   );
 
   const getWeeklyProgress = useCallback((): WeeklyProgress[] => {
-    return store.weeklyProgress;
-  }, [store.weeklyProgress]);
+    return storeRef.current.weeklyProgress;
+  }, []);
 
   const calcWeeklyProgress = useCallback(() => {
-    store.calculateWeeklyProgress();
-  }, [store]);
+    storeRef.current.calculateWeeklyProgress();
+  }, []);
 
   const getMonthlyProgress = useCallback((): MonthlyProgress => {
-    return store.calculateMonthlyProgress();
-  }, [store]);
+    return storeRef.current.calculateMonthlyProgress();
+  }, []);
 
   return {
     weights: store.progressData.weights,

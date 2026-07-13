@@ -85,17 +85,19 @@ export class AIService {
   private async convertImageToBase64(uri: string): Promise<string> {
     try {
       const decodedUri = decodeURIComponent(uri);
-      console.log("[AIService] Resizing image for upload:", decodedUri);
+      if (__DEV__) {
+        console.log("[AIService] Resizing image for upload:", decodedUri);
+      }
       
-      // Resize to max 800px width and apply compression to reduce payload size
-      // This prevents 500 timeouts / payload limits on the Opencode API gateway
       const manipulatedResult = await manipulateAsync(
         decodedUri,
-        [{ resize: { width: 800 } }],
-        { compress: 0.7, format: SaveFormat.JPEG }
+        [{ resize: { width: 600 } }],
+        { compress: 0.5, format: SaveFormat.JPEG }
       );
       
-      console.log("[AIService] Reading image with fetch:", manipulatedResult.uri);
+      if (__DEV__) {
+        console.log("[AIService] Reading image with fetch:", manipulatedResult.uri);
+      }
       const response = await fetch(manipulatedResult.uri);
       const blob = await response.blob();
       
@@ -130,7 +132,7 @@ export class AIService {
       throw e;
     }
 
-    const models = [IMAGE_MODEL, "hy3-free"];
+    const models = [IMAGE_MODEL, "hy3-free", ...TEXT_MODELS];
     const combinations = [];
 
     for (const model of models) {
@@ -191,12 +193,15 @@ export class AIService {
     let lastError: any = null;
 
     for (const combo of combinations) {
-      let attempts = 2;
+      let attempts = 3;
+      let delay = 1000;
       while (attempts > 0) {
         try {
-          console.log(
-            `[AIService] Requesting scan via model: ${combo.modelName} (${combo.formatName} format)...`,
-          );
+          if (__DEV__) {
+            console.log(
+              `[AIService] Requesting scan via model: ${combo.modelName} (${combo.formatName} format)...`,
+            );
+          }
 
           const response = await fetch(OPENCODE_BASE_URL, {
             method: "POST",
@@ -207,17 +212,24 @@ export class AIService {
             body: JSON.stringify(combo.payload),
           });
 
-          console.log(`[AIService] ${combo.modelName} response status:`, response.status);
+          if (__DEV__) {
+            console.log(`[AIService] ${combo.modelName} response status:`, response.status);
+          }
 
           if (!response.ok) {
             const errText = await response.text();
+            if (response.status >= 500) {
+              if (__DEV__) {
+                console.log(`[AIService] Server error (${response.status}) for ${combo.modelName}, retrying...`);
+              }
+              throw new Error(`Server error: ${response.status}`);
+            }
             console.error(`[AIService] API Error response for ${combo.modelName}:`, errText);
             throw new Error(`AI analysis failed: ${response.status} ${errText}`);
           }
 
           const data = await response.json();
           const content = data.choices[0].message.content;
-          console.log("[AIService] Raw Content:", content);
 
           const result: AIRecognitionResult =
             parseJSONOutput<AIRecognitionResult>(content);
@@ -243,7 +255,8 @@ export class AIService {
           lastError = error;
           attempts--;
           if (attempts > 0) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            delay *= 2;
           }
         }
       }
@@ -262,15 +275,11 @@ export class AIService {
       const model = modelsToTry.splice(modelIndex, 1)[0];
 
       try {
-        console.log(
-          `[AIService] searchFood query: "${query}" trying model: ${model}`,
-        );
-        console.log(
-          "[AIService] API Key Present:",
-          !!OPENCODE_API_KEY,
-          "Length:",
-          OPENCODE_API_KEY.length,
-        );
+        if (__DEV__) {
+          console.log(
+            `[AIService] searchFood query: "${query}" trying model: ${model}`,
+          );
+        }
 
         const payload = {
           model,
@@ -293,10 +302,12 @@ export class AIService {
           body: JSON.stringify(payload),
         });
 
-        console.log(
-          `[AIService] Response Status for ${model}:`,
-          response.status,
-        );
+        if (__DEV__) {
+          console.log(
+            `[AIService] Response Status for ${model}:`,
+            response.status,
+          );
+        }
 
         if (!response.ok) {
           const errText = await response.text();
@@ -309,7 +320,9 @@ export class AIService {
 
         const data = await response.json();
         const content = data.choices[0].message.content;
-        console.log("[AIService] Raw Content:", content);
+        if (__DEV__) {
+          console.log("[AIService] Raw Content:", content);
+        }
 
         const parsed = parseJSONOutput<{ items: FoodItem[] }>(content);
         return parsed.items || [];
@@ -334,15 +347,11 @@ export class AIService {
       const model = modelsToTry.splice(modelIndex, 1)[0];
 
       try {
-        console.log(
-          `[AIService] getNutritionInfo: "${foodName}" (${servingSize || "standard"}) trying model: ${model}`,
-        );
-        console.log(
-          "[AIService] API Key Present:",
-          !!OPENCODE_API_KEY,
-          "Length:",
-          OPENCODE_API_KEY.length,
-        );
+        if (__DEV__) {
+          console.log(
+            `[AIService] getNutritionInfo: "${foodName}" (${servingSize || "standard"}) trying model: ${model}`,
+          );
+        }
 
         const payload = {
           model,
@@ -366,10 +375,12 @@ export class AIService {
           body: JSON.stringify(payload),
         });
 
-        console.log(
-          `[AIService] Response Status for ${model}:`,
-          response.status,
-        );
+        if (__DEV__) {
+          console.log(
+            `[AIService] Response Status for ${model}:`,
+            response.status,
+          );
+        }
 
         if (!response.ok) {
           const errText = await response.text();
@@ -384,7 +395,9 @@ export class AIService {
 
         const data = await response.json();
         const content = data.choices[0].message.content;
-        console.log("[AIService] Raw Content:", content);
+        if (__DEV__) {
+          console.log("[AIService] Raw Content:", content);
+        }
 
         const parsed: FoodItem = parseJSONOutput<FoodItem>(content);
         return parsed;

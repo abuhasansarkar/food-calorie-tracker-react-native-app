@@ -18,13 +18,13 @@ class AnalyticsService {
   private events: AnalyticsEvent[] = [];
   private userProperties: UserProperties = {};
   private flushInterval: ReturnType<typeof setInterval> | null = null;
+  private isFlushing = false;
 
-  constructor() {
-    if (typeof global !== "undefined") {
-      this.flushInterval = setInterval(() => {
-        this.flush();
-      }, 30000);
-    }
+  startAutoFlush(intervalMs = 30000): void {
+    if (this.flushInterval) return;
+    this.flushInterval = setInterval(() => {
+      this.flush();
+    }, intervalMs);
   }
 
   setUserProperties(properties: UserProperties): void {
@@ -91,8 +91,9 @@ class AnalyticsService {
   }
 
   async flush(): Promise<void> {
-    if (this.events.length === 0) return;
+    if (this.events.length === 0 || this.isFlushing) return;
 
+    this.isFlushing = true;
     const batch = [...this.events];
     this.events = [];
 
@@ -103,14 +104,19 @@ class AnalyticsService {
         body: JSON.stringify({ events: batch }),
       });
 
-      if (!response.ok && __DEV__) {
-        console.warn("[Analytics] Failed to flush events:", response.status);
+      if (!response.ok) {
+        if (__DEV__) {
+          console.warn("[Analytics] Failed to flush events:", response.status);
+        }
+        this.events = [...batch, ...this.events];
       }
     } catch (error) {
       if (__DEV__) {
         console.warn("[Analytics] Flush failed, re-queuing events:", error);
       }
       this.events = [...batch, ...this.events];
+    } finally {
+      this.isFlushing = false;
     }
   }
 
@@ -119,6 +125,9 @@ class AnalyticsService {
       clearInterval(this.flushInterval);
       this.flushInterval = null;
     }
+    this.events = [];
+    this.userProperties = {};
+    this.isFlushing = false;
   }
 }
 

@@ -10,6 +10,7 @@ interface CardProps {
   className?: string;
   variant?: "elevated" | "outlined" | "filled";
   padding?: keyof typeof spacing;
+  style?: Record<string, unknown>;
 }
 
 export function Card({

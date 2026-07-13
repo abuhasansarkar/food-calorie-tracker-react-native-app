@@ -1,12 +1,32 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { WeightEntry, CalorieEntry, ProgressData, WeeklyProgress, MonthlyProgress } from "@/types/progress";
 import { generateId } from "@/utils/helpers";
 import { getToday, getWeekRange, getMonthRange } from "@/utils/date";
+import * as SecureStore from "expo-secure-store";
+
+const PROGRESS_STORAGE_KEY = "aceky_progress_data";
+const WEEKLY_STORAGE_KEY = "aceky_weekly_progress";
+
+async function saveToStorage(key: string, value: unknown): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(key, JSON.stringify(value));
+  } catch {}
+}
+
+async function loadFromStorage<T>(key: string): Promise<T | null> {
+  try {
+    const raw = await SecureStore.getItemAsync(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
 
 interface ProgressStore {
   progressData: ProgressData;
   weeklyProgress: WeeklyProgress[];
   isLoading: boolean;
+  isLoaded: boolean;
   addWeightEntry: (weightKg: number, notes?: string) => void;
   removeWeightEntry: (id: string) => void;
   updateCalorieEntry: (date: string, consumed: number, goal: number) => void;
@@ -17,8 +37,9 @@ interface ProgressStore {
 
 export function useProgressStore(): ProgressStore {
   const today = getToday();
+  const loadedRef = useRef(false);
 
-  const [progressData, setProgressData] = useState<ProgressData>({
+  const defaultProgressData = (): ProgressData => ({
     weights: [],
     calories: [],
     startDate: today,
@@ -30,8 +51,35 @@ export function useProgressStore(): ProgressStore {
     streakDays: 0,
   });
 
+  const [progressData, setProgressData] = useState<ProgressData>(defaultProgressData());
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    Promise.all([
+      loadFromStorage<ProgressData>(PROGRESS_STORAGE_KEY),
+      loadFromStorage<WeeklyProgress[]>(WEEKLY_STORAGE_KEY),
+    ]).then(([data, weekly]) => {
+      if (data) setProgressData(data);
+      if (weekly) setWeeklyProgress(weekly);
+      setIsLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(PROGRESS_STORAGE_KEY, progressData);
+    }
+  }, [progressData, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(WEEKLY_STORAGE_KEY, weeklyProgress);
+    }
+  }, [weeklyProgress, isLoaded]);
 
   const addWeightEntry = useCallback(
     (weightKg: number, notes?: string) => {
@@ -177,6 +225,7 @@ export function useProgressStore(): ProgressStore {
     progressData,
     weeklyProgress,
     isLoading,
+    isLoaded,
     addWeightEntry,
     removeWeightEntry,
     updateCalorieEntry,

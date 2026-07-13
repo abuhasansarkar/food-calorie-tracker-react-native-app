@@ -6,6 +6,9 @@ import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useEffect } from "react";
+import { analyticsService } from "@/services/analytics";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "../global.css";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -30,8 +33,16 @@ if (
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    analyticsService.startAutoFlush();
+    return () => {
+      analyticsService.destroy();
+    };
+  }, []);
+
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <ErrorBoundary>
       <SafeAreaProvider>
         <ThemeProvider>
           <UserProvider>
@@ -54,6 +65,7 @@ export default function RootLayout() {
           </UserProvider>
         </ThemeProvider>
       </SafeAreaProvider>
+      </ErrorBoundary>
     </ClerkProvider>
   );
 }

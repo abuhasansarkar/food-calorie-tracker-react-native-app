@@ -43,7 +43,7 @@ export default function WeightScreen() {
       <View className="flex-1 justify-center">
         <View className="px-6 mb-12">
           <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-3xl font-extrabold tracking-tight mb-2 text-center">
-            What's your current weight?
+            What&apos;s your current weight?
           </Text>
           <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-base font-medium text-center">
             This helps us track your progress accurately

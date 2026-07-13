@@ -24,7 +24,24 @@ class StorageService {
   }
 
   async clear(): Promise<void> {
-    console.warn("StorageService.clear() not implemented - would require iterating all keys");
+    // SecureStore doesn't support key enumeration on Android < 10.
+    // We clear known keys instead.
+    const knownKeys = [
+      "aceky_guest_mode",
+      "aceky_onboarding_data",
+      "aceky_onboarding_completed",
+      "aceky_theme_mode",
+      "aceky_settings",
+      "@aceky_auth_token",
+      "@aceky_user_data",
+      "@aceky_onboarding_data",
+      "@aceky_theme",
+      "@aceky_settings",
+      "@aceky_calorie_goal",
+    ];
+    await Promise.allSettled(
+      knownKeys.map((key) => SecureStore.deleteItemAsync(key).catch(() => {}))
+    );
   }
 
   async getString(key: string): Promise<string | null> {

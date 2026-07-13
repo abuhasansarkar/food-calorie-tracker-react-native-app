@@ -28,7 +28,15 @@ export function ProgressRing({
   const innerSize = size - strokeWidth * 2;
 
   const halfSize = size / 2;
-  const rotation = (clampedProgress / 100) * 360;
+  const innerRadius = innerSize / 2;
+  const progressHalf = clampedProgress <= 50 ? 0 : 1;
+
+  const rightRotation = clampedProgress <= 50
+    ? `${clampedProgress * 3.6}deg`
+    : "180deg";
+  const leftRotation = clampedProgress > 50
+    ? `${(clampedProgress - 50) * 3.6}deg`
+    : "0deg";
 
   return (
     <View className="items-center justify-center">
@@ -43,25 +51,71 @@ export function ProgressRing({
           overflow: "hidden",
         }}
       >
-        <View
-          style={{
+        {/* Right half-circle progress */}
+        <View style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: size,
+          height: size,
+          borderRadius: halfSize,
+          overflow: "hidden",
+          transform: [{ rotate: rightRotation }],
+        }}>
+          <View style={{
             position: "absolute",
-            width: size,
+            top: 0,
+            left: halfSize,
+            width: halfSize,
             height: size,
-            borderRadius: halfSize,
             backgroundColor: ringColor,
-            opacity: clampedProgress / 100,
-          }}
-        />
+          }} />
+        </View>
 
+        {/* Left half-circle progress */}
+        <View style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: size,
+          height: size,
+          borderRadius: halfSize,
+          overflow: "hidden",
+          transform: [{ rotate: leftRotation }],
+        }}>
+          <View style={{
+            position: "absolute",
+            top: 0,
+            left: halfSize,
+            width: halfSize,
+            height: size,
+            backgroundColor: ringColor,
+          }} />
+        </View>
+
+        {/* Clipping mask */}
+        {progressHalf === 1 && (
+          <View style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: halfSize,
+            height: size,
+            borderRadius: 0,
+            backgroundColor: ringBg,
+          }} />
+        )}
+
+        {/* Inner circle */}
         <View
           style={{
             width: innerSize,
             height: innerSize,
-            borderRadius: innerSize / 2,
+            borderRadius: innerRadius,
             backgroundColor: isDark ? colors.surface.dark : colors.white,
             justifyContent: "center",
             alignItems: "center",
+            zIndex: 2,
           }}
         >
           {showPercentage && (

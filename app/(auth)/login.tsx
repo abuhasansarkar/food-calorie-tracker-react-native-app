@@ -68,19 +68,19 @@ export default function LoginScreen() {
     setError("");
 
     try {
-      const { createdSessionId } = await startSSOFlow({ strategy });
+      const flow = await startSSOFlow({ strategy });
 
-      if (!createdSessionId) {
+      if (!flow.createdSessionId) {
         setError("SSO failed to create a session. Please try again.");
         return;
       }
 
       await endGuestSession();
-      await clerk.setActive({ session: createdSessionId });
+      await clerk.setActive({ session: flow.createdSessionId });
 
       router.replace("/(onboarding)/gender");
     } catch (e: unknown) {
-      const err = e as { errors?: Array<{ message: string }>; message?: string };
+      const err = e as { errors?: { message: string }[]; message?: string };
       setError(err?.errors?.[0]?.message || err?.message || "SSO sign in failed");
     } finally {
       setLoading(false);

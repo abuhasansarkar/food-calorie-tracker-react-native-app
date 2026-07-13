@@ -1,32 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, Text, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Loader } from "@/components/ui/Loader";
 import { useThemeContext } from "@/context/ThemeContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { aiService } from "@/services/ai";
 
 export default function AnalyzingScreen() {
   const router = useRouter();
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
   const { isDark, colors } = useThemeContext();
   const [dots, setDots] = useState("");
+  const [statusText, setStatusText] = useState("Analyzing");
+  const startedRef = useRef(false);
 
   useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
     const dotInterval = setInterval(() => {
       setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
     }, 500);
 
-    const timer = setTimeout(() => {
-      router.replace({
-        pathname: "/meal/result",
-        params: imageUri ? { imageUri } : {},
-      });
-    }, 3000);
+    if (imageUri) {
+      setStatusText("Analyzing");
+      aiService
+        .analyzeFoodImage(imageUri)
+        .then((result) => {
+          router.replace({
+            pathname: "/meal/result",
+            params: {
+              imageUri,
+              scannedData: JSON.stringify(result),
+            },
+          });
+        })
+        .catch(() => {
+          router.replace({
+            pathname: "/meal/result",
+            params: imageUri ? { imageUri } : {},
+          });
+        });
+    } else {
+      // No image URI - go to result in manual mode after a brief delay
+      const timer = setTimeout(() => {
+        router.replace({ pathname: "/meal/result" });
+      }, 500);
+      return () => {
+        clearInterval(dotInterval);
+        clearTimeout(timer);
+      };
+    }
 
     return () => {
       clearInterval(dotInterval);
-      clearTimeout(timer);
     };
   }, []);
 
@@ -47,7 +75,7 @@ export default function AnalyzingScreen() {
           style={{ color: isDark ? colors.text.dark : colors.text.light }}
           className="text-2xl font-black mb-2 text-center"
         >
-          Analyzing{dots}
+          {statusText}{dots}
         </Text>
         <Text
           style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}

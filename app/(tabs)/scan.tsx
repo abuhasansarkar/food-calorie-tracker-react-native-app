@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,10 @@ import {
   TouchableOpacity,
   StatusBar,
   AppState,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
+import { Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useThemeContext } from "@/context/ThemeContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -34,6 +37,9 @@ export default function ScanScreen() {
   const [flash, setFlash] = useState<FlashMode>("off");
   const [permission, requestPermission] = useCameraPermissions();
   const [isCameraActive, setIsCameraActive] = useState(true);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [pickedImageUri, setPickedImageUri] = useState<string | null>(null);
+  const [isPicking, setIsPicking] = useState(false);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
@@ -66,6 +72,13 @@ export default function ScanScreen() {
     );
   }, []);
 
+  const navigateToAnalyzing = useCallback((imageUri: string) => {
+    router.push({
+      pathname: "/meal/analyzing",
+      params: { imageUri },
+    });
+  }, [router]);
+
   const handleCapture = async () => {
     if (!cameraRef.current) return;
 
@@ -79,40 +92,44 @@ export default function ScanScreen() {
       });
 
       if (photo?.uri) {
-        router.push({
-          pathname: "/meal/analyzing",
-          params: { imageUri: photo.uri },
-        });
+        navigateToAnalyzing(photo.uri);
       }
     } catch {
-      router.push("/meal/analyzing");
+      navigateToAnalyzing("");
     }
   };
 
   const handlePickImage = async () => {
+    if (isPicking) return;
+    setIsPicking(true);
+
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        alert("Permission to access the photo library is required!");
+        Alert.alert("Permission Required", "Permission to access the photo library is required!");
+        setIsPicking(false);
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ['images'] as unknown as ImagePicker.MediaTypeOptions,
         allowsEditing: true,
         quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedUri = result.assets[0].uri;
-        router.push({
-          pathname: "/meal/analyzing",
-          params: { imageUri: selectedUri },
-        });
+        setPickedImageUri(selectedUri);
+        setTimeout(() => {
+          navigateToAnalyzing(selectedUri);
+          setPickedImageUri(null);
+        }, 400);
       }
     } catch (e) {
       console.error("Error picking image:", e);
-      alert("Failed to pick image from gallery.");
+      Alert.alert("Error", "Failed to pick image from gallery.");
+    } finally {
+      setIsPicking(false);
     }
   };
 
@@ -179,8 +196,24 @@ export default function ScanScreen() {
           facing={facing}
           flash={flash}
           mode="picture"
+          onCameraReady={() => setCameraReady(true)}
         />
       )}
+
+      {!cameraReady && isCameraActive && (
+        <View style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" color={activeColor} />
+          <Text style={[styles.permissionTitle, { marginTop: 16 }]}>Preparing camera...</Text>
+        </View>
+      )}
+
+      {pickedImageUri && (
+        <Image
+          source={{ uri: pickedImageUri }}
+          style={[StyleSheet.absoluteFillObject, { resizeMode: "cover" }]}
+        />
+      )}
+
       <View style={styles.overlayContainer}>
         <View style={styles.maskTop} />
         <View style={styles.maskMiddleRow}>
@@ -235,25 +268,6 @@ export default function ScanScreen() {
       <View style={[styles.bottomPanel, { paddingBottom: Math.max(insets.bottom, 24) + 12 }]}>
         <TouchableOpacity
           style={styles.panelButton}
-          onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))}
-          activeOpacity={0.7}
-          accessibilityLabel="Flip camera"
-        >
-          <View style={styles.panelIconCircle}>
-            <MaterialCommunityIcons name="camera-flip-outline" size={24} color="#FFFFFF" />
-          </View>
-          <Text style={styles.panelButtonText}>Flip</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.shutterButtonOuter, { borderColor: activeColor }]}
-          onPress={handleCapture}
-          activeOpacity={0.8}
-          accessibilityLabel="Take photo"
-        >
-          <View style={styles.shutterButtonInner} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.panelButton}
           onPress={handlePickImage}
           activeOpacity={0.7}
           accessibilityLabel="Choose from gallery"
@@ -262,6 +276,14 @@ export default function ScanScreen() {
             <MaterialCommunityIcons name="image-multiple-outline" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.panelButtonText}>Gallery</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.shutterButtonOuter, { borderColor: activeColor }]}
+          onPress={handleCapture}
+          activeOpacity={0.8}
+          accessibilityLabel="Take photo"
+        >
+          <View style={styles.shutterButtonInner} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.panelButton}
