@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StatusBar } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StatusBar, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +15,15 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Loader } from "@/components/ui/Loader";
 import { aiService } from "@/services/ai";
 
+interface Suggestion {
+  name: string;
+  reason: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+}
+
 interface DetectedFood {
   name: string;
   serving: string;
@@ -22,13 +31,17 @@ interface DetectedFood {
   protein: number;
   carbs: number;
   fat: number;
+  fiber: number;
+  sugar: number;
+  confidence: number;
   icon: string;
+  suggestions: Suggestion[];
 }
 
 const DEFAULT_FOODS: DetectedFood[] = [
-  { name: "Grilled Chicken Breast", serving: "150g", calories: 247, protein: 46, carbs: 0, fat: 5.4, icon: "🍗" },
-  { name: "Steamed Rice", serving: "200g", calories: 216, protein: 4.4, carbs: 45, fat: 0.4, icon: "🍚" },
-  { name: "Mixed Vegetables", serving: "100g", calories: 65, protein: 2.5, carbs: 13, fat: 0.2, icon: "🥗" },
+  { name: "Grilled Chicken Breast", serving: "150g", calories: 247, protein: 46, carbs: 0, fat: 5.4, fiber: 0, sugar: 0, confidence: 95, icon: "🍗", suggestions: [] },
+  { name: "Steamed Rice", serving: "200g", calories: 216, protein: 4.4, carbs: 45, fat: 0.4, fiber: 0.6, sugar: 0, confidence: 95, icon: "🍚", suggestions: [] },
+  { name: "Mixed Vegetables", serving: "100g", calories: 65, protein: 2.5, carbs: 13, fat: 0.2, fiber: 4, sugar: 3, confidence: 95, icon: "🥗", suggestions: [] },
 ];
 
 function getFoodIcon(name: string): string {
@@ -55,13 +68,14 @@ export default function MealResultScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
   const { isDark, colors } = useThemeContext();
   const { addMeal } = useNutritionContext();
-  
+
   // Basic states
   const [selectedMealType, setSelectedMealType] = useState<MealType>(MealType.Breakfast);
   const [detectedFoods, setDetectedFoods] = useState<DetectedFood[]>(DEFAULT_FOODS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confidence, setConfidence] = useState(95);
+  const [mealName, setMealName] = useState<string>("");
 
   // Edit / Add modal states
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -86,17 +100,24 @@ export default function MealResultScreen() {
       setError(null);
       aiService.analyzeFoodImage(imageUri)
         .then((result) => {
-          const mappedFoods: DetectedFood[] = result.foods.map((food) => ({
+          const mappedFoods: DetectedFood[] = result.foods.map((food, i) => ({
             name: food.name,
             serving: food.servingSize,
             calories: food.calories,
             protein: food.proteinG,
             carbs: food.carbsG,
             fat: food.fatG,
+            fiber: food.fiberG ?? 0,
+            sugar: food.sugarG ?? 0,
+            confidence: Math.round(result.confidence * 100),
             icon: getFoodIcon(food.name),
+            suggestions: (food as unknown as { suggestions?: Suggestion[] }).suggestions || [],
           }));
           setDetectedFoods(mappedFoods);
           setConfidence(Math.round(result.confidence * 100));
+          if ((result as unknown as { mealName?: string }).mealName) {
+            setMealName((result as unknown as { mealName: string }).mealName);
+          }
         })
         .catch((err) => {
           console.error("Scanning failed, falling back to mock data", err);
@@ -185,7 +206,11 @@ export default function MealResultScreen() {
       protein: proteinNum,
       carbs: carbsNum,
       fat: fatNum,
+      fiber: 0,
+      sugar: 0,
+      confidence: 100,
       icon: getFoodIcon(editName),
+      suggestions: [],
     };
 
     if (editIndex === -1) {
@@ -226,7 +251,7 @@ export default function MealResultScreen() {
     setEditProtein(item.proteinG.toString());
     setEditCarbs(item.carbsG.toString());
     setEditFat(item.fatG.toString());
-    
+
     setIsSearchModalVisible(false);
     setIsEditModalVisible(true);
   };
@@ -239,6 +264,14 @@ export default function MealResultScreen() {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header title="Scan Results" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} className="flex-1 px-4">
+        {imageUri && (
+          <View className="mb-4 overflow-hidden rounded-2xl" style={{ height: 300 }}>
+            <Image
+              source={{ uri: imageUri }}
+              style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+            />
+          </View>
+        )}
         {loading ? (
           <View style={{ flex: 1, paddingVertical: 80, justifyContent: 'center', alignItems: 'center' }}>
             <Loader size="large" color={colors.primary[500]} />
@@ -254,7 +287,7 @@ export default function MealResultScreen() {
                 <Text style={{ color: '#EF4444' }} className="text-xs font-semibold flex-1">{error}</Text>
               </Card>
             )}
-            
+
             <Card variant="elevated" className="items-center mb-4 py-6">
               <Badge label={`${confidence}% AI Confidence`} variant="success" size="sm" />
               <View className="flex-row items-baseline mt-4">
@@ -283,6 +316,14 @@ export default function MealResultScreen() {
                 <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-[10px] font-bold uppercase tracking-wider mt-0.5">Fat</Text>
               </Card>
             </View>
+            {mealName ? (
+              <Text
+                style={{ color: isDark ? colors.text.dark : colors.text.light }}
+                className="text-sm font-black mb-1 uppercase tracking-wider"
+              >
+                {mealName}
+              </Text>
+            ) : null}
             <Card variant="outlined" className="mb-4">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-bold mb-3">
                 Detected Foods
@@ -304,32 +345,88 @@ export default function MealResultScreen() {
                           borderBottomWidth: isLast ? 0 : 1,
                           borderBottomColor: isDark ? colors.border.dark : "rgba(0,0,0,0.05)",
                         }}
-                        className="flex-row items-center justify-between py-3"
+                        className="py-3"
                       >
-                        <TouchableOpacity
-                          onPress={() => handleOpenEditModal(index)}
-                          activeOpacity={0.7}
-                          className="flex-row items-center flex-1 pr-3"
-                        >
-                          <View style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)" }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
-                            <Text className="text-lg">{food.icon}</Text>
+                        <View className="flex-row items-center justify-between mb-2">
+                          <TouchableOpacity
+                            onPress={() => handleOpenEditModal(index)}
+                            activeOpacity={0.7}
+                            className="flex-row items-center flex-1 pr-3"
+                          >
+                            <View style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)" }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                              <Text className="text-lg">{food.icon}</Text>
+                            </View>
+                            <View className="flex-1">
+                              <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-sm font-bold">{food.name}</Text>
+                              <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-xs font-semibold mt-0.5">{food.serving}</Text>
+                            </View>
+                          </TouchableOpacity>
+                          <View className="flex-row items-center gap-2">
+                            <Text style={{ color: colors.primary[500] }} className="text-sm font-black">{food.calories} kcal</Text>
+                            <TouchableOpacity
+                              onPress={() => handleDeleteFood(index)}
+                              activeOpacity={0.7}
+                              className="p-1"
+                              accessibilityLabel={`Delete ${food.name}`}
+                            >
+                              <MaterialCommunityIcons name="trash-can-outline" size={20} color="#EF4444" />
+                            </TouchableOpacity>
                           </View>
-                          <View className="flex-1">
-                            <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-sm font-bold">{food.name}</Text>
-                            <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-xs font-semibold mt-0.5">{food.serving} (Tap to edit)</Text>
+                        </View>
+                        <View className="flex-row" style={{ gap: 12 }}>
+                          <View className="flex-row items-center" style={{ gap: 3 }}>
+                            <MaterialCommunityIcons name="food-steak" size={12} color="#3B82F6" />
+                            <Text style={{ color: "#3B82F6" }} className="text-[10px] font-bold">{food.protein}g</Text>
+                          </View>
+                          <View className="flex-row items-center" style={{ gap: 3 }}>
+                            <MaterialCommunityIcons name="bread-slice" size={12} color="#F59E0B" />
+                            <Text style={{ color: "#F59E0B" }} className="text-[10px] font-bold">{food.carbs}g</Text>
+                          </View>
+                          <View className="flex-row items-center" style={{ gap: 3 }}>
+                            <MaterialCommunityIcons name="oil" size={12} color="#10B981" />
+                            <Text style={{ color: "#10B981" }} className="text-[10px] font-bold">{food.fat}g</Text>
+                          </View>
+                          {food.fiber > 0 && (
+                            <View className="flex-row items-center" style={{ gap: 3 }}>
+                              <MaterialCommunityIcons name="leaf" size={12} color="#8B5CF6" />
+                              <Text style={{ color: "#8B5CF6" }} className="text-[10px] font-bold">{food.fiber}g</Text>
+                            </View>
+                          )}
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            router.push({
+                              pathname: "/meal/food-detail",
+                              params: {
+                                name: food.name,
+                                serving: food.serving,
+                                calories: String(food.calories),
+                                protein: String(food.protein),
+                                carbs: String(food.carbs),
+                                fat: String(food.fat),
+                                fiber: String(food.fiber),
+                                sugar: String(food.sugar),
+                                confidence: String(food.confidence),
+                                suggestions: JSON.stringify(food.suggestions),
+                              },
+                            });
+                          }}
+                          activeOpacity={0.6}
+                          className="mt-2 self-start"
+                        >
+                          <View
+                            style={{
+                              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                              borderRadius: 8,
+                              paddingHorizontal: 10,
+                              paddingVertical: 4,
+                            }}
+                            className="flex-row items-center"
+                          >
+                            <MaterialCommunityIcons name="information-outline" size={14} color={colors.primary[500]} />
+                            <Text style={{ color: colors.primary[500] }} className="text-[10px] font-bold ml-1">View Details</Text>
                           </View>
                         </TouchableOpacity>
-                        <View className="flex-row items-center gap-3">
-                          <Text style={{ color: colors.primary[500] }} className="text-sm font-black mr-1">{food.calories} kcal</Text>
-                          <TouchableOpacity
-                            onPress={() => handleDeleteFood(index)}
-                            activeOpacity={0.7}
-                            className="p-1"
-                            accessibilityLabel={`Delete ${food.name}`}
-                          >
-                            <MaterialCommunityIcons name="trash-can-outline" size={20} color="#EF4444" />
-                          </TouchableOpacity>
-                        </View>
                       </View>
                     );
                   })
@@ -486,7 +583,7 @@ export default function MealResultScreen() {
               </TouchableOpacity>
             }
           />
-          
+
           {searching && (
             <View style={{ paddingVertical: 20, alignItems: "center" }}>
               <Loader size="small" color={colors.primary[500]} />
@@ -537,7 +634,7 @@ export default function MealResultScreen() {
                 </View>
               </TouchableOpacity>
             ))}
-            
+
             {!searching && searchResults.length === 0 && searchQuery.trim().length > 0 && !searchError && (
               <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500], textAlign: "center", fontSize: 12, marginVertical: 12 }}>
                 No results found. Try another query.

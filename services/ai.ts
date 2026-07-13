@@ -2,6 +2,7 @@ import { FoodItem, ScanResult } from "@/types/meal";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 
 export interface AIRecognitionResult {
+  mealName: string;
   foods: {
     name: string;
     servingSize: string;
@@ -9,9 +10,22 @@ export interface AIRecognitionResult {
     proteinG: number;
     carbsG: number;
     fatG: number;
+    fiberG?: number;
+    sugarG?: number;
     confidence: number;
+    suggestions: {
+      name: string;
+      reason: string;
+      calories: number;
+      proteinG: number;
+      carbsG: number;
+      fatG: number;
+    }[];
   }[];
   totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
 }
 
 // Strip leading/trailing quotes if they are present in the env file
@@ -148,7 +162,17 @@ export class AIService {
                 content: [
                   {
                     type: "text",
-                    text: 'Analyze this food image and provide the nutritional information. Return ONLY a valid JSON object with exactly this structure: {"foods": [{"name": "string", "servingSize": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "confidence": 0}], "totalCalories": 0}.',
+                    text: `You are a professional nutritionist AI. Analyze this food image and return ONLY valid JSON with accurate nutritional data based on standard USDA and FDA nutritional databases. Include healthier alternatives for each food item.
+
+Rules:
+- Use standard serving sizes (e.g., "100g", "1 cup (240ml)", "1 medium (120g)")
+- Provide accurate calorie and macro estimates based on visual portion size
+- Confidence: 0-100 based on how clearly visible the food is
+- For each food, suggest 1-2 healthier alternatives with nutritional comparison
+- Name the overall meal (e.g., "Grilled Chicken Bowl")
+
+Return ONLY this exact JSON structure with no markdown, no extra text:
+{"mealName": "string", "foods": [{"name": "string", "servingSize": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "fiberG": 0, "sugarG": 0, "confidence": 0, "suggestions": [{"name": "string", "reason": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0}]}], "totalCalories": 0, "totalProtein": 0, "totalCarbs": 0, "totalFat": 0}`,
                   },
                   {
                     type: "image_url",
@@ -172,7 +196,17 @@ export class AIService {
                 content: [
                   {
                     type: "text",
-                    text: 'Analyze this food image and provide the nutritional information. Return ONLY a valid JSON object with exactly this structure: {"foods": [{"name": "string", "servingSize": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "confidence": 0}], "totalCalories": 0}.',
+                    text: `You are a professional nutritionist AI. Analyze this food image and return ONLY valid JSON with accurate nutritional data based on standard USDA and FDA nutritional databases. Include healthier alternatives for each food item.
+
+Rules:
+- Use standard serving sizes (e.g., "100g", "1 cup (240ml)", "1 medium (120g)")
+- Provide accurate calorie and macro estimates based on visual portion size
+- Confidence: 0-100 based on how clearly visible the food is
+- For each food, suggest 1-2 healthier alternatives with nutritional comparison
+- Name the overall meal (e.g., "Grilled Chicken Bowl")
+
+Return ONLY this exact JSON structure with no markdown, no extra text:
+{"mealName": "string", "foods": [{"name": "string", "servingSize": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "fiberG": 0, "sugarG": 0, "confidence": 0, "suggestions": [{"name": "string", "reason": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0}]}], "totalCalories": 0, "totalProtein": 0, "totalCarbs": 0, "totalFat": 0}`,
                   },
                   {
                     type: "image",
@@ -243,6 +277,8 @@ export class AIService {
               proteinG: food.proteinG,
               carbsG: food.carbsG,
               fatG: food.fatG,
+              fiberG: food.fiberG ?? 0,
+              sugarG: food.sugarG ?? 0,
             })),
             totalCalories: result.totalCalories,
             confidence: result.foods.reduce(
