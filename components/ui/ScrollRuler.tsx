@@ -29,7 +29,7 @@ export function ScrollRuler({ minValue, maxValue, defaultValue, unit, onValueCha
       scrollViewRef.current?.scrollTo({ x: initialX, animated: false });
     }, 120);
     return () => clearTimeout(timer);
-  }, []);
+  }, [initialValue, minValue]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = event.nativeEvent.contentOffset.x;

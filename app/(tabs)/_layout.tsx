@@ -25,7 +25,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface CustomTabBarProps extends BottomTabBarProps {
-  colors: any;
+  colors: typeof import("@/theme/colors").colors;
   isDark: boolean;
 }
 

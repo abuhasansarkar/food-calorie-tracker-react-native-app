@@ -1,5 +1,6 @@
 import { NutritionProvider } from "@/context/NutritionContext";
 import { ProgressProvider } from "@/context/ProgressContext";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { UserProvider } from "@/context/UserContext";
 import { ClerkProvider } from "@clerk/expo";
@@ -46,22 +47,24 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <UserProvider>
-            <NutritionProvider>
-              <ProgressProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                >
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(onboarding)" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="meal" />
-                  <Stack.Screen name="settings" />
-                </Stack>
-              </ProgressProvider>
-            </NutritionProvider>
+            <SubscriptionProvider>
+              <NutritionProvider>
+                <ProgressProvider>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                  >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(onboarding)" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="meal" />
+                    <Stack.Screen name="settings" />
+                  </Stack>
+                </ProgressProvider>
+              </NutritionProvider>
+            </SubscriptionProvider>
           </UserProvider>
         </ThemeProvider>
       </SafeAreaProvider>

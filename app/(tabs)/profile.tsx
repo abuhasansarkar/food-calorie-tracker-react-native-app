@@ -61,7 +61,7 @@ export default function ProfileScreen() {
         {/* User Card */}
         <Card variant="outlined" className="flex-row items-center mb-4 p-4">
           <Avatar
-            name={user?.name || "Alex"}
+            name={user?.name || "U"}
             imageUrl={user?.avatar}
             size={64}
           />
@@ -70,13 +70,13 @@ export default function ProfileScreen() {
               style={{ color: isDark ? colors.text.dark : colors.text.light }}
               className="text-lg font-black"
             >
-              {user?.name || "Alex Sarkar"}
+              {user?.name || "Your Name"}
             </Text>
             <Text 
               style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
               className="text-xs font-semibold mt-0.5"
             >
-              {isGuest ? "Guest Session" : user?.email || "alex@aceky.ai"}
+              {isGuest ? "Guest Session" : user?.email || "No email"}
             </Text>
             <View className="flex-row gap-2 mt-2">
               <Badge label={isGuest ? "Guest" : "Free"} variant="neutral" size="sm" />
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
           <View className="flex-row justify-between">
             <View className="items-center flex-1">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-black">
-                {onboardingData?.age ?? "25"}
+                {onboardingData?.age ?? "—"}
               </Text>
               <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-[10px] font-bold uppercase tracking-wider mt-1">
                 Age
@@ -118,7 +118,7 @@ export default function ProfileScreen() {
             
             <View className="items-center flex-1 border-x border-neutral-200 dark:border-neutral-800">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-black">
-                {onboardingData?.heightCm ? `${onboardingData.heightCm} cm` : "175 cm"}
+                {onboardingData?.heightCm ? `${onboardingData.heightCm} cm` : "—"}
               </Text>
               <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-[10px] font-bold uppercase tracking-wider mt-1">
                 Height
@@ -127,7 +127,7 @@ export default function ProfileScreen() {
             
             <View className="items-center flex-1 border-r border-neutral-200 dark:border-neutral-800">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-black">
-                {onboardingData?.weightKg ? `${onboardingData.weightKg} kg` : "55 kg"}
+                {onboardingData?.weightKg ? `${onboardingData.weightKg} kg` : "—"}
               </Text>
               <Text style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }} className="text-[10px] font-bold uppercase tracking-wider mt-1">
                 Weight

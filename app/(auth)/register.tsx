@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { OAuthButton } from "@/components/ui/OAuthButton";
 import { Header } from "@/components/ui/Header";
-import { endGuestSession } from "@/utils/guest";
+import { endGuestSession, migrateGuestData } from "@/utils/guest";
 import {
   validateEmail,
   validateName,
@@ -77,6 +77,7 @@ export default function RegisterScreen() {
 
       if (signUp.status === "complete") {
         await endGuestSession();
+        await migrateGuestData();
         await clerk.setActive({ session: signUp.createdSessionId });
         router.replace("/(onboarding)/gender");
         return;

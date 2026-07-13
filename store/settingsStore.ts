@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { storageService } from "@/services/storage";
+import { apiService } from "@/services/api";
 import { Config } from "@/constants/Config";
 
 export interface AppSettings {
@@ -15,6 +16,10 @@ export interface AppSettings {
   unitSystem: "metric" | "imperial";
   privacyAnalytics: boolean;
   privacyPersonalization: boolean;
+  streakAlerts: boolean;
+  tipsAndTricks: boolean;
+  promotions: boolean;
+  shareData: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -30,6 +35,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   unitSystem: "metric",
   privacyAnalytics: true,
   privacyPersonalization: true,
+  streakAlerts: true,
+  tipsAndTricks: false,
+  promotions: false,
+  shareData: false,
 };
 
 interface SettingsStore {
@@ -51,11 +60,25 @@ export function useSettingsStore(): SettingsStore {
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
     try {
+      let remoteDefaults: Partial<AppSettings> = {};
+      try {
+        const response = await apiService.get<Partial<AppSettings>>("/settings/defaults");
+        if (response.success && response.data) {
+          remoteDefaults = response.data;
+        }
+      } catch (error) {
+        if (__DEV__) console.warn("[SettingsStore] Failed to fetch remote defaults:", error);
+      }
+
+      const mergedDefaults = { ...DEFAULT_SETTINGS, ...remoteDefaults };
+
       const stored = await storageService.get<AppSettings>(
         Config.storage.keys.SETTINGS
       );
       if (stored) {
-        setSettings({ ...DEFAULT_SETTINGS, ...stored });
+        setSettings({ ...mergedDefaults, ...stored });
+      } else {
+        setSettings(mergedDefaults);
       }
     } catch (error) {
       console.error("Failed to load settings:", error);

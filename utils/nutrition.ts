@@ -18,7 +18,13 @@ export function calculateBMR(
   if (gender === Gender.Male) {
     return 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
   }
-  return 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.33 * age;
+  if (gender === Gender.Female) {
+    return 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.33 * age;
+  }
+  // Gender.Other: use average of male and female formulas for a neutral estimate
+  const maleBMR = 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
+  const femaleBMR = 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.33 * age;
+  return (maleBMR + femaleBMR) / 2;
 }
 
 export function calculateTDEE(bmr: number, activityLevel: ActivityLevel): number {

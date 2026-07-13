@@ -8,25 +8,7 @@ import { Header } from "@/components/ui/Header";
 import { useThemeContext } from "@/context/ThemeContext";
 import { Meal, FoodItem } from "@/types/meal";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-function getFoodIcon(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes("chicken") || n.includes("poultry")) return "🍗";
-  if (n.includes("rice") || n.includes("grain")) return "🍚";
-  if (n.includes("salad") || n.includes("vegetable") || n.includes("green") || n.includes("broccoli") || n.includes("spinach")) return "🥗";
-  if (n.includes("apple") || n.includes("fruit") || n.includes("strawberry") || n.includes("berry")) return "🍎";
-  if (n.includes("banana")) return "🍌";
-  if (n.includes("egg")) return "🍳";
-  if (n.includes("fish") || n.includes("salmon") || n.includes("tuna")) return "🐟";
-  if (n.includes("beef") || n.includes("steak") || n.includes("meat") || n.includes("pork")) return "🥩";
-  if (n.includes("bread") || n.includes("toast") || n.includes("sandwich")) return "🍞";
-  if (n.includes("milk") || n.includes("yogurt") || n.includes("cheese")) return "🥛";
-  if (n.includes("avocado")) return "🥑";
-  if (n.includes("pizza")) return "🍕";
-  if (n.includes("burger")) return "🍔";
-  if (n.includes("sweet") || n.includes("cake") || n.includes("chocolate") || n.includes("cookie")) return "🍰";
-  return "🍽️";
-}
+import { getFoodIcon } from "@/utils/helpers";
 
 export default function MealDetailScreen() {
   const router = useRouter();

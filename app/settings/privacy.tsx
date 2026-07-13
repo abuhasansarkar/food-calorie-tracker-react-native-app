@@ -1,20 +1,16 @@
-import { useState } from "react";
 import { Text, ScrollView, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Toggle } from "@/components/ui/Toggle";
 import { Card } from "@/components/ui/Card";
 import { useThemeContext } from "@/context/ThemeContext";
+import { useSettingsStore } from "@/store/settingsStore";
 import { useRouter } from "expo-router";
 
 export default function PrivacyScreen() {
   const router = useRouter();
   const { isDark, colors } = useThemeContext();
-  const [settings, setSettings] = useState({
-    analytics: true,
-    personalization: true,
-    shareData: false,
-  });
+  const { settings, updateSettings } = useSettingsStore();
 
   return (
     <SafeAreaView
@@ -29,25 +25,25 @@ export default function PrivacyScreen() {
           <Toggle
             label="Analytics"
             description="Help us improve by sharing usage data"
-            value={settings.analytics}
+            value={settings.privacyAnalytics}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, analytics: v }))
+              updateSettings({ privacyAnalytics: v })
             }
           />
           <Toggle
             label="Personalization"
             description="Personalized recommendations based on your data"
-            value={settings.personalization}
+            value={settings.privacyPersonalization}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, personalization: v }))
+              updateSettings({ privacyPersonalization: v })
             }
           />
           <Toggle
             label="Share with Research"
             description="Anonymized data for nutrition research"
-            value={settings.shareData}
+            value={settings.shareData ?? false}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, shareData: v }))
+              updateSettings({ shareData: v })
             }
           />
         </Card>

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { OAuthButton } from "@/components/ui/OAuthButton";
 import { Header } from "@/components/ui/Header";
-import { endGuestSession } from "@/utils/guest";
+import { endGuestSession, migrateGuestData } from "@/utils/guest";
 import { useClerk, useSignIn, useSSO } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -51,6 +51,7 @@ export default function LoginScreen() {
 
       if (signIn.status === "complete") {
         await endGuestSession();
+        await migrateGuestData();
         await clerk.setActive({ session: signIn.createdSessionId });
         router.replace("/(onboarding)/gender");
       } else {

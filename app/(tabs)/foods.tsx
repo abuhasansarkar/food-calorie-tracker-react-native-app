@@ -3,48 +3,39 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
+import { Loader } from "@/components/ui/Loader";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useThemeContext } from "@/context/ThemeContext";
 import { useNutritionContext } from "@/context/NutritionContext";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Image, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-interface FoodEntry {
-  name: string;
-  serving: string;
-  calories: number;
-  protein: number;
-  icon: string;
-  category: string;
-}
-
-const FOOD_DATABASE: FoodEntry[] = [
-  { name: "Chicken Breast", serving: "150g", calories: 247, protein: 46, icon: "🍗", category: "Lunch" },
-  { name: "Brown Rice", serving: "200g", calories: 216, protein: 5, icon: "🍚", category: "Lunch" },
-  { name: "Avocado", serving: "100g", calories: 160, protein: 2, icon: "🥑", category: "Breakfast" },
-  { name: "Greek Yogurt", serving: "200g", calories: 146, protein: 20, icon: "🥛", category: "Breakfast" },
-  { name: "Banana", serving: "120g", calories: 107, protein: 1.3, icon: "🍌", category: "Snacks" },
-  { name: "Oatmeal with Honey", serving: "100g", calories: 340, protein: 11, icon: "🥣", category: "Breakfast" },
-  { name: "Peanut Butter", serving: "32g", calories: 188, protein: 8, icon: "🥜", category: "Snacks" },
-  { name: "Salmon", serving: "150g", calories: 280, protein: 25, icon: "🐟", category: "Dinner" },
-];
-
-const CATEGORIES = ["All", "Breakfast", "Lunch", "Dinner", "Snacks"];
+import { foodService, FoodReference } from "@/services/foods";
 
 export default function FoodsScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [foods, setFoods] = useState<FoodReference[]>([]);
+  const [categories, setCategories] = useState<string[]>(["All"]);
+  const [isLoadingFoods, setIsLoadingFoods] = useState(true);
   const { isDark, colors } = useThemeContext();
   const { handleScroll } = useTabBarVisibility();
   const { mealHistory } = useNutritionContext();
   const insets = useSafeAreaInsets();
 
+  useEffect(() => {
+    foodService.getAllFoods().then((data) => {
+      setFoods(data);
+      setIsLoadingFoods(false);
+    });
+    foodService.getCategories().then(setCategories);
+  }, []);
+
   const filteredFoods = useMemo(() => {
-    let result = FOOD_DATABASE;
+    let result = foods;
 
     if (activeCategory !== "All") {
       result = result.filter((food) => food.category === activeCategory);
@@ -56,7 +47,7 @@ export default function FoodsScreen() {
     }
 
     return result;
-  }, [search, activeCategory]);
+  }, [search, activeCategory, foods]);
 
   const loggedMeals = useMemo(() => {
     let meals = mealHistory.meals;
@@ -88,7 +79,7 @@ export default function FoodsScreen() {
           className="flex-row"
         >
           <View className="flex-row gap-2">
-            {CATEGORIES.map((category) => {
+            {categories.map((category) => {
               const isSelected = activeCategory === category;
               return (
                 <TouchableOpacity
@@ -209,15 +200,17 @@ export default function FoodsScreen() {
           </Text>
         </View>
 
-        {filteredFoods.length === 0 ? (
+        {isLoadingFoods ? (
+          <Loader />
+        ) : filteredFoods.length === 0 ? (
           <EmptyState
             title="No foods found"
             description="Try a different search term or category"
           />
         ) : (
           <View className="gap-3">
-            {filteredFoods.map((food, index) => (
-              <TouchableOpacity key={`${food.name}-${index}`} activeOpacity={0.85}>
+            {filteredFoods.map((food) => (
+              <TouchableOpacity key={food.id} activeOpacity={0.85}>
                 <Card variant="outlined">
                   <View className="flex-row justify-between items-center">
                     <View className="flex-row items-center flex-1 pr-3">

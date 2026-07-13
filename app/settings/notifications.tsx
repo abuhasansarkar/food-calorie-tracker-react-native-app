@@ -1,22 +1,16 @@
-import { useState } from "react";
 import { ScrollView, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Toggle } from "@/components/ui/Toggle";
 import { Card } from "@/components/ui/Card";
 import { useThemeContext } from "@/context/ThemeContext";
+import { useSettingsStore } from "@/store/settingsStore";
 import { useRouter } from "expo-router";
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { isDark, colors } = useThemeContext();
-  const [settings, setSettings] = useState({
-    mealReminders: true,
-    weightReminders: true,
-    streakAlerts: true,
-    tipsAndTricks: false,
-    promotions: false,
-  });
+  const { settings, updateSettings } = useSettingsStore();
 
   return (
     <SafeAreaView
@@ -33,7 +27,7 @@ export default function NotificationsScreen() {
             description="Get reminded to log your meals"
             value={settings.mealReminders}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, mealReminders: v }))
+              updateSettings({ mealReminders: v })
             }
           />
           <Toggle
@@ -41,7 +35,7 @@ export default function NotificationsScreen() {
             description="Weekly weigh-in reminders"
             value={settings.weightReminders}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, weightReminders: v }))
+              updateSettings({ weightReminders: v })
             }
           />
           <Toggle
@@ -49,7 +43,7 @@ export default function NotificationsScreen() {
             description="Notifications about your tracking streaks"
             value={settings.streakAlerts}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, streakAlerts: v }))
+              updateSettings({ streakAlerts: v })
             }
           />
           <Toggle
@@ -57,7 +51,7 @@ export default function NotificationsScreen() {
             description="Nutritional tips and advice"
             value={settings.tipsAndTricks}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, tipsAndTricks: v }))
+              updateSettings({ tipsAndTricks: v })
             }
           />
           <Toggle
@@ -65,7 +59,7 @@ export default function NotificationsScreen() {
             description="Special offers and promotions"
             value={settings.promotions}
             onValueChange={(v) =>
-              setSettings((s) => ({ ...s, promotions: v }))
+              updateSettings({ promotions: v })
             }
           />
         </Card>

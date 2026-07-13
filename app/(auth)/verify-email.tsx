@@ -78,7 +78,9 @@ export default function VerifyEmailScreen() {
     if (!signUp) return;
     try {
       await signUp.verifications.sendEmailCode();
-    } catch {}
+    } catch (error) {
+      if (__DEV__) console.warn("[VerifyEmail] Failed to resend code:", error);
+    }
   };
 
   if (!signUp) {

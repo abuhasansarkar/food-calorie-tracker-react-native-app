@@ -28,11 +28,20 @@ export interface AIRecognitionResult {
   totalFat: number;
 }
 
-// Strip leading/trailing quotes if they are present in the env file
+// IMPORTANT SECURITY NOTICE:
+// EXPO_PUBLIC_* environment variables are bundled into the client app at build time.
+// Anyone who decompiles the app can extract this API key.
+//
+// For production: Set EXPO_PUBLIC_OPENCODE_API_KEY to a server-side proxy URL instead.
+// The proxy should forward requests to OpenCode's API using a server-side secret.
+// Example: EXPO_PUBLIC_OPENCODE_API_KEY_PROXY="https://api.acekyai.com/v1/ai/proxy"
+//
+// The key below is only used when no proxy is configured.
 const OPENCODE_API_KEY = (
   process.env.EXPO_PUBLIC_OPENCODE_API_KEY || ""
 ).replace(/^["']|["']$/g, "");
-const OPENCODE_BASE_URL = "https://opencode.ai/zen/v1/chat/completions";
+const OPENCODE_PROXY_URL = process.env.EXPO_PUBLIC_OPENCODE_API_KEY_PROXY || "";
+const OPENCODE_BASE_URL = OPENCODE_PROXY_URL || "https://opencode.ai/zen/v1/chat/completions";
 
 const TEXT_MODELS = [
   "big-pickle",
@@ -54,6 +63,11 @@ function parseJSONOutput<T>(content: string): T {
     }
   }
 
+  // Try direct parse first
+  try {
+    return JSON.parse(cleaned);
+  } catch {}
+
   // Extract the JSON object boundaries to ignore conversational garbage
   const firstBrace = cleaned.indexOf('{');
   const firstBracket = cleaned.indexOf('[');
@@ -73,6 +87,9 @@ function parseJSONOutput<T>(content: string): T {
     }
     if (endBrace !== -1) {
       cleaned = cleaned.substring(firstBrace, endBrace + 1);
+      try {
+        return JSON.parse(cleaned);
+      } catch {}
     }
   } else if (firstBracket !== -1) {
     let bracketCount = 0;
@@ -89,10 +106,15 @@ function parseJSONOutput<T>(content: string): T {
     }
     if (endBracket !== -1) {
       cleaned = cleaned.substring(firstBracket, endBracket + 1);
+      try {
+        return JSON.parse(cleaned);
+      } catch {}
     }
   }
 
-  return JSON.parse(cleaned);
+  throw new Error(
+    `AI response does not contain valid JSON. First 200 chars: "${content.slice(0, 200)}"`,
+  );
 }
 
 export class AIService {
@@ -265,8 +287,20 @@ Return ONLY this exact JSON structure with no markdown, no extra text:
           const data = await response.json();
           const content = data.choices[0].message.content;
 
-          const result: AIRecognitionResult =
-            parseJSONOutput<AIRecognitionResult>(content);
+          if (__DEV__) {
+            console.log(`[AIService] Raw response from ${combo.modelName}:`, content.slice(0, 500));
+          }
+
+          let result: AIRecognitionResult;
+          try {
+            result = parseJSONOutput<AIRecognitionResult>(content);
+          } catch (parseError) {
+            if (__DEV__) {
+              console.log(`[AIService] ${combo.modelName} returned non-JSON response (model may not support image analysis), skipping this model`);
+            }
+            lastError = parseError;
+            break;
+          }
 
           return {
             foods: result.foods.map((food, index) => ({

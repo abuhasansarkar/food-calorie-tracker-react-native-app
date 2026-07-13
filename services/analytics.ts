@@ -1,4 +1,7 @@
 import { Config } from "@/constants/Config";
+import * as SecureStore from "expo-secure-store";
+
+const ANALYTICS_QUEUE_KEY = "@aceky_analytics_queue";
 
 export interface AnalyticsEvent {
   name: string;
@@ -20,8 +23,32 @@ class AnalyticsService {
   private flushInterval: ReturnType<typeof setInterval> | null = null;
   private isFlushing = false;
 
+  private async persistQueue(): Promise<void> {
+    try {
+      if (this.events.length > 0) {
+        await SecureStore.setItemAsync(ANALYTICS_QUEUE_KEY, JSON.stringify(this.events));
+      }
+    } catch (error) {
+      if (__DEV__) console.warn("[Analytics] Failed to persist queue:", error);
+    }
+  }
+
+  private async restoreQueue(): Promise<void> {
+    try {
+      const raw = await SecureStore.getItemAsync(ANALYTICS_QUEUE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as AnalyticsEvent[];
+        this.events = [...saved, ...this.events];
+        await SecureStore.deleteItemAsync(ANALYTICS_QUEUE_KEY);
+      }
+    } catch (error) {
+      if (__DEV__) console.warn("[Analytics] Failed to restore queue:", error);
+    }
+  }
+
   startAutoFlush(intervalMs = 30000): void {
     if (this.flushInterval) return;
+    this.restoreQueue();
     this.flushInterval = setInterval(() => {
       this.flush();
     }, intervalMs);
@@ -42,6 +69,7 @@ class AnalyticsService {
     };
 
     this.events.push(event);
+    this.persistQueue();
 
     if (__DEV__) {
       console.log("[Analytics]", name, properties);
@@ -109,12 +137,16 @@ class AnalyticsService {
           console.warn("[Analytics] Failed to flush events:", response.status);
         }
         this.events = [...batch, ...this.events];
+        await this.persistQueue();
+        return;
       }
+      await SecureStore.deleteItemAsync(ANALYTICS_QUEUE_KEY);
     } catch (error) {
       if (__DEV__) {
         console.warn("[Analytics] Flush failed, re-queuing events:", error);
       }
       this.events = [...batch, ...this.events];
+      await this.persistQueue();
     } finally {
       this.isFlushing = false;
     }

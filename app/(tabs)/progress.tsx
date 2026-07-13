@@ -19,35 +19,30 @@ export default function ProgressScreen() {
   const { handleScroll } = useTabBarVisibility();
   const insets = useSafeAreaInsets();
 
-  // -- Weight-related metrics from real stored data (with fallbacks to onboarding) --
+  // -- Weight-related metrics from real stored data --
   const weightMetrics = useMemo(() => {
-    const current =
-      progressStore.progressData.currentWeightKg ||
-      onboardingData?.weightKg ||
-      70.5;
-    const goal = onboardingData?.goalWeightKg || 65.0;
-    const start =
-      progressStore.progressData.startWeightKg ||
-      (goal > current ? current - 3.5 : current + 4.5);
+    const current = progressStore.progressData.currentWeightKg || onboardingData?.weightKg || 0;
+    const goal = onboardingData?.goalWeightKg || 0;
+    const start = progressStore.progressData.startWeightKg || 0;
 
-    const difference = current - start;
-    const diffText =
-      difference > 0
+    const hasData = current > 0 && start > 0;
+    const difference = hasData ? current - start : 0;
+    const diffText = hasData
+      ? difference > 0
         ? `+${difference.toFixed(1)} kg`
-        : `${difference.toFixed(1)} kg`;
+        : `${difference.toFixed(1)} kg`
+      : "—";
     const isGain = goal > start;
     const label = isGain ? "Total Gained" : "Total Lost";
 
     const streakDays = progressStore.progressData.streakDays || 0;
     const totalDays = progressStore.progressData.totalDays || 0;
 
-    return { current, goal, start, diffText, label, streakDays, totalDays };
+    return { current, goal, start, diffText, label, streakDays, totalDays, hasData };
   }, [progressStore.progressData, onboardingData]);
 
-  // -- Weight chart: use real recorded weight history if available, else fall back to approximation --
+  // -- Weight chart: use real recorded weight history if available --
   const chartWeightData = useMemo(() => {
-    const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
     const realWeights = progressStore.progressData.weights;
     if (realWeights.length >= 2) {
       const recent = realWeights.slice(-7);
@@ -60,36 +55,31 @@ export default function ProgressScreen() {
         };
       });
     }
-
-    // Fallback: generate approximate 7-day data scaled to current weight
-    const base = weightMetrics.current;
-    const step = weightMetrics.goal > base ? 0.3 : -0.3;
-    return DAY_LABELS.map((label, i) => ({
-      label,
-      value: parseFloat((base - step * (6 - i)).toFixed(1)),
-    }));
-  }, [progressStore.progressData.weights, weightMetrics]);
+    return [];
+  }, [progressStore.progressData.weights]);
 
   // -- Calorie metrics: use NutritionContext for today and ProgressStore for weekly --
   const calorieMetrics = useMemo(() => {
-    const plan =
+    const hasPlan = !!(
       onboardingData?.gender &&
       onboardingData?.weightKg &&
       onboardingData?.heightCm &&
       onboardingData?.age &&
       onboardingData?.activityLevel &&
       onboardingData?.goalType
-        ? calculateNutritionPlan(
-            onboardingData.gender,
-            onboardingData.weightKg,
-            onboardingData.heightCm,
-            onboardingData.age,
-            onboardingData.activityLevel,
-            onboardingData.goalType
-          )
-        : { goalCalories: 2000 };
+    );
+    const plan = hasPlan && onboardingData
+      ? calculateNutritionPlan(
+          onboardingData.gender!,
+          onboardingData.weightKg!,
+          onboardingData.heightCm!,
+          onboardingData.age!,
+          onboardingData.activityLevel!,
+          onboardingData.goalType!
+        )
+      : null;
 
-    const goal = plan.goalCalories;
+    const goal = plan?.goalCalories || 0;
 
     // Weekly average from stored calorie entries
     const weekEntries = progressStore.progressData.calories.slice(-7);
@@ -97,12 +87,13 @@ export default function ProgressScreen() {
     const weekAvg =
       weekEntries.length > 0
         ? Math.round(weekTotal / weekEntries.length)
-        : currentMeals?.totalCalories || 0;
+        : 0;
 
+    const hasCalorieData = weekEntries.length > 0 || (currentMeals?.totalCalories ?? 0) > 0;
     const progressPercent = goal > 0 ? Math.min((weekAvg / goal) * 100, 100) : 0;
     const isSurplus = weekAvg >= goal;
 
-    return { goal, weekAvg, progressPercent, isSurplus };
+    return { goal, weekAvg, progressPercent, isSurplus, hasCalorieData };
   }, [progressStore.progressData.calories, onboardingData, currentMeals]);
 
   // -- BMI calculation --
@@ -148,7 +139,7 @@ export default function ProgressScreen() {
               style={{ color: isDark ? colors.text.dark : colors.text.light }}
               className="text-lg font-black"
             >
-              {weightMetrics.current} kg
+              {weightMetrics.current > 0 ? `${weightMetrics.current} kg` : "—"}
             </Text>
           </Card>
           <Card variant="outlined" className="flex-1 items-center py-3">
@@ -162,7 +153,7 @@ export default function ProgressScreen() {
               style={{ color: isDark ? colors.text.dark : colors.text.light }}
               className="text-lg font-black"
             >
-              {weightMetrics.start.toFixed(1)} kg
+              {weightMetrics.start > 0 ? `${weightMetrics.start.toFixed(1)} kg` : "—"}
             </Text>
           </Card>
           <Card variant="outlined" className="flex-1 items-center py-3">
@@ -173,7 +164,7 @@ export default function ProgressScreen() {
               Goal
             </Text>
             <Text style={{ color: colors.primary[500] }} className="text-lg font-black">
-              {weightMetrics.goal} kg
+              {weightMetrics.goal > 0 ? `${weightMetrics.goal} kg` : "—"}
             </Text>
           </Card>
         </View>
@@ -196,7 +187,7 @@ export default function ProgressScreen() {
               {weightMetrics.label}
             </Text>
             <Text style={{ color: colors.primary[500] }} className="text-xl font-black mt-1">
-              {weightMetrics.diffText}
+              {weightMetrics.hasData ? weightMetrics.diffText : "—"}
             </Text>
           </Card>
           <Card variant="outlined" className="flex-1 p-4">

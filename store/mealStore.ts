@@ -23,14 +23,17 @@ interface MealStore {
 async function saveToStorage(key: string, value: unknown): Promise<void> {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch {}
+  } catch (error) {
+    if (__DEV__) console.warn(`[MealStore] Failed to save ${key}:`, error);
+  }
 }
 
 async function loadFromStorage<T>(key: string): Promise<T | null> {
   try {
     const raw = await AsyncStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn(`[MealStore] Failed to load ${key}:`, error);
     return null;
   }
 }

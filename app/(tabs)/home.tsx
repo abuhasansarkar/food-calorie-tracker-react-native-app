@@ -3,9 +3,11 @@ import { Card } from "@/components/ui/Card";
 import { Header } from "@/components/ui/Header";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { useNutritionContext } from "@/context/NutritionContext";
+import { useProgressContext } from "@/context/ProgressContext";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useThemeContext } from "@/context/ThemeContext";
 import { useUserContext } from "@/context/UserContext";
+import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { calculateNutritionPlan } from "@/utils/nutrition";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -26,6 +28,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, onboardingData } = useUserContext();
   const { currentMeals } = useNutritionContext();
+  const { progressData } = useProgressContext();
+  const { currentTier } = useSubscriptionContext();
   const { isDark, colors } = useThemeContext();
   const { handleScroll } = useTabBarVisibility();
   const insets = useSafeAreaInsets();
@@ -39,13 +43,7 @@ export default function HomeScreen() {
       !onboardingData?.activityLevel ||
       !onboardingData?.goalType
     ) {
-      // Return reasonable fallbacks for gaining weight if profile is incomplete
-      return {
-        goalCalories: 3250,
-        proteinG: 180,
-        carbsG: 430,
-        fatG: 110,
-      };
+      return null;
     }
     return calculateNutritionPlan(
       onboardingData.gender,
@@ -57,26 +55,24 @@ export default function HomeScreen() {
     );
   }, [onboardingData]);
 
-  const displayName = user?.name || "Alex";
-  const goalCalories = plan.goalCalories;
+  const displayName = user?.name || "there";
+  const streakDays = progressData?.streakDays || 0;
+  const goalCalories = plan?.goalCalories || 0;
   const consumedCalories = currentMeals?.totalCalories || 0;
-  const remainingCalories = Math.max(0, goalCalories - consumedCalories);
-  const caloriePercentage = (consumedCalories / goalCalories) * 100;
+  const remainingCalories = goalCalories > 0 ? Math.max(0, goalCalories - consumedCalories) : consumedCalories;
+  const caloriePercentage = goalCalories > 0 ? (consumedCalories / goalCalories) * 100 : 0;
 
   const consumedProtein = currentMeals?.totalProtein || 0;
-  const goalProtein = plan.proteinG;
-  const proteinPercentage = Math.min(
-    100,
-    (consumedProtein / goalProtein) * 100,
-  );
+  const goalProtein = plan?.proteinG || 0;
+  const proteinPercentage = goalProtein > 0 ? Math.min(100, (consumedProtein / goalProtein) * 100) : 0;
 
   const consumedCarbs = currentMeals?.totalCarbs || 0;
-  const goalCarbs = plan.carbsG;
-  const carbsPercentage = Math.min(100, (consumedCarbs / goalCarbs) * 100);
+  const goalCarbs = plan?.carbsG || 0;
+  const carbsPercentage = goalCarbs > 0 ? Math.min(100, (consumedCarbs / goalCarbs) * 100) : 0;
 
   const consumedFat = currentMeals?.totalFat || 0;
-  const goalFat = plan.fatG;
-  const fatPercentage = Math.min(100, (consumedFat / goalFat) * 100);
+  const goalFat = plan?.fatG || 0;
+  const fatPercentage = goalFat > 0 ? Math.min(100, (consumedFat / goalFat) * 100) : 0;
 
   return (
     <SafeAreaView
@@ -92,9 +88,8 @@ export default function HomeScreen() {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       <Header
-        title={`Hi, ${displayName} 🧑👋`}
+        title={`Hi, ${displayName}`}
         subtitle="Ready to crush your goals today?"
-        rightAction={<Badge label="XP 1,250" variant="primary" />}
       />
 
       <ScrollView
@@ -103,34 +98,35 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
         className="flex-1 px-4"
       >
-        {/* Streak Notification Card */}
-        <Card
-          variant="filled"
-          className="mb-4 flex-row items-center justify-between p-3.5"
-        >
-          <View className="flex-row items-center gap-3">
-            <View className="w-9 h-9 rounded-full bg-amber-500/15 items-center justify-center">
-              <MaterialCommunityIcons name="fire" size={20} color="#F59E0B" />
+        {streakDays > 0 && (
+          <Card
+            variant="filled"
+            className="mb-4 flex-row items-center justify-between p-3.5"
+          >
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-full bg-amber-500/15 items-center justify-center">
+                <MaterialCommunityIcons name="fire" size={20} color="#F59E0B" />
+              </View>
+              <View>
+                <Text
+                  style={{ color: isDark ? colors.text.dark : colors.text.light }}
+                  className="text-sm font-bold"
+                >
+                  {streakDays} day{streakDays !== 1 ? "s" : ""} streak
+                </Text>
+                <Text
+                  style={{
+                    color: isDark ? colors.text.secondary : colors.neutral[500],
+                  }}
+                  className="text-xs font-medium"
+                >
+                  Keep it up!
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text
-                style={{ color: isDark ? colors.text.dark : colors.text.light }}
-                className="text-sm font-bold"
-              >
-                14 days streak
-              </Text>
-              <Text
-                style={{
-                  color: isDark ? colors.text.secondary : colors.neutral[500],
-                }}
-                className="text-xs font-medium"
-              >
-                Keep it up!
-              </Text>
-            </View>
-          </View>
-          <Badge label="Active" variant="success" size="sm" />
-        </Card>
+            <Badge label="Active" variant="success" size="sm" />
+          </Card>
+        )}
 
         {/* Calorie Progress Ring Dashboard */}
         <Card variant="elevated" className="mb-4 items-center py-6">

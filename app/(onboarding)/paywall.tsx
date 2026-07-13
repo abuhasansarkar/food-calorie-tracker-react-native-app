@@ -1,58 +1,34 @@
-import { View, Text, ScrollView, TouchableOpacity, StatusBar } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StatusBar, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-
+import { useState } from "react";
 import { useThemeContext } from "@/context/ThemeContext";
+import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-const PLANS = [
-  {
-    tier: "Free",
-    price: "$0",
-    period: "forever",
-    features: [
-      "3 daily AI scans",
-      "7-day meal history",
-      "Basic nutrition tracking",
-      "Weight tracking",
-    ],
-  },
-  {
-    tier: "Premium",
-    price: "$9.99",
-    period: "/month",
-    popular: true,
-    features: [
-      "50 daily AI scans",
-      "90-day meal history",
-      "Advanced nutrition insights",
-      "Macro tracking",
-      "Meal reminders",
-      "Progress charts",
-      "No ads",
-    ],
-  },
-  {
-    tier: "Premium Plus",
-    price: "$19.99",
-    period: "/month",
-    features: [
-      "Unlimited AI scans",
-      "Unlimited meal history",
-      "Personalized meal plans",
-      "Recipe suggestions",
-      "AI coach chat",
-      "Priority support",
-      "All Premium features",
-    ],
-  },
-];
+import { SubscriptionTier } from "@/types/subscription";
 
 export default function PaywallScreen() {
   const router = useRouter();
   const { isDark, colors } = useThemeContext();
+  const { plans, refreshSubscription } = useSubscriptionContext();
+  const [subscribingId, setSubscribingId] = useState<string | null>(null);
+
+  const handleSubscribe = async (planId: string) => {
+    setSubscribingId(planId);
+    // In production, this would trigger an in-app purchase flow
+    // For now, simulate subscription activation
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await refreshSubscription();
+      router.replace("/(tabs)/home");
+    } catch {
+      Alert.alert("Subscription Error", "Unable to process subscription. Please try again.");
+    } finally {
+      setSubscribingId(null);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -93,85 +69,92 @@ export default function PaywallScreen() {
 
         {/* Plans */}
         <View className="px-5 gap-4">
-          {PLANS.map((plan) => (
-            <Card
-              key={plan.tier}
-              variant={plan.popular ? "elevated" : "outlined"}
-              style={{
-                borderColor: plan.popular
-                  ? colors.primary[500]
-                  : isDark ? colors.border.dark : colors.border.light,
-                borderWidth: plan.popular ? 2 : 1,
-              }}
-              className="p-5"
-            >
-              {plan.popular && (
-                <View
-                  style={{ backgroundColor: colors.primary[500] }}
-                  className="rounded-full px-3 py-1.5 self-start mb-4"
-                >
-                  <Text className="text-black text-[10px] font-black tracking-wider">
-                    MOST POPULAR
-                  </Text>
-                </View>
-              )}
-
-              {/* Tier name + price */}
-              <View className="flex-row justify-between items-center mb-4">
-                <Text
-                  style={{ color: isDark ? colors.text.dark : colors.text.light }}
-                  className="text-xl font-black"
-                >
-                  {plan.tier}
-                </Text>
-                <View className="flex-row items-baseline">
-                  <Text
-                    style={{ color: colors.primary[500] }}
-                    className="text-2xl font-black tracking-tight"
+          {plans.map((plan, index) => {
+            const isPopular = index === 1;
+            const isFree = plan.tier === SubscriptionTier.Free;
+            return (
+              <Card
+                key={plan.id}
+                variant={isPopular ? "elevated" : "outlined"}
+                style={{
+                  borderColor: isPopular
+                    ? colors.primary[500]
+                    : isDark ? colors.border.dark : colors.border.light,
+                  borderWidth: isPopular ? 2 : 1,
+                }}
+                className="p-5"
+              >
+                {isPopular && (
+                  <View
+                    style={{ backgroundColor: colors.primary[500] }}
+                    className="rounded-full px-3 py-1.5 self-start mb-4"
                   >
-                    {plan.price}
-                  </Text>
-                  <Text
-                    style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
-                    className="text-sm font-bold ml-1"
-                  >
-                    {plan.period}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Features list */}
-              <View className="gap-2.5 mb-5">
-                {plan.features.map((feature, index) => (
-                  <View key={index} className="flex-row items-center gap-2.5">
-                    <MaterialCommunityIcons
-                      name="check-circle"
-                      size={16}
-                      color={colors.primary[500]}
-                    />
-                    <Text
-                      style={{ color: isDark ? colors.text.secondary : colors.neutral[600] }}
-                      className="text-sm font-semibold"
-                    >
-                      {feature}
+                    <Text className="text-black text-[10px] font-black tracking-wider">
+                      MOST POPULAR
                     </Text>
                   </View>
-                ))}
-              </View>
+                )}
+
+                {/* Tier name + price */}
+                <View className="flex-row justify-between items-center mb-4">
+                  <Text
+                    style={{ color: isDark ? colors.text.dark : colors.text.light }}
+                    className="text-xl font-black"
+                  >
+                    {plan.name}
+                  </Text>
+                  <View className="flex-row items-baseline">
+                    <Text
+                      style={{ color: colors.primary[500] }}
+                      className="text-2xl font-black tracking-tight"
+                    >
+                      ${plan.price}
+                    </Text>
+                    <Text
+                      style={{ color: isDark ? colors.text.secondary : colors.neutral[500] }}
+                      className="text-sm font-bold ml-1"
+                    >
+                      {isFree ? "forever" : `/${plan.interval}`}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Features list */}
+                <View className="gap-2.5 mb-5">
+                  {plan.features.map((feature, i) => (
+                    <View key={i} className="flex-row items-center gap-2.5">
+                      <MaterialCommunityIcons
+                        name="check-circle"
+                        size={16}
+                        color={colors.primary[500]}
+                      />
+                      <Text
+                        style={{ color: isDark ? colors.text.secondary : colors.neutral[600] }}
+                        className="text-sm font-semibold"
+                      >
+                        {feature}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
 
                 <Button
-                  title={plan.tier === "Free" ? "Continue Free" : `Subscribe to ${plan.tier}`}
+                  title={isFree ? "Continue Free" : `Subscribe - $${plan.price}/${plan.interval}`}
                   onPress={() => {
-                    if (plan.tier === "Free") {
+                    if (isFree) {
                       router.replace("/(tabs)/home");
+                    } else {
+                      handleSubscribe(plan.id);
                     }
                   }}
-                  variant={plan.popular ? "primary" : "outline"}
-                  disabled={plan.tier !== "Free"}
+                  variant={isPopular ? "primary" : "outline"}
+                  loading={subscribingId === plan.id}
+                  disabled={subscribingId !== null}
                   fullWidth
                 />
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </View>
 
         {/* Restore Purchases */}

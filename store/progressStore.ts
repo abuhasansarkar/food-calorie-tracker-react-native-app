@@ -2,22 +2,25 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { WeightEntry, CalorieEntry, ProgressData, WeeklyProgress, MonthlyProgress } from "@/types/progress";
 import { generateId } from "@/utils/helpers";
 import { getToday, getWeekRange, getMonthRange } from "@/utils/date";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const PROGRESS_STORAGE_KEY = "aceky_progress_data";
-const WEEKLY_STORAGE_KEY = "aceky_weekly_progress";
+const PROGRESS_STORAGE_KEY = "@aceky_progress_data";
+const WEEKLY_STORAGE_KEY = "@aceky_weekly_progress";
 
 async function saveToStorage(key: string, value: unknown): Promise<void> {
   try {
-    await SecureStore.setItemAsync(key, JSON.stringify(value));
-  } catch {}
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    if (__DEV__) console.warn(`[ProgressStore] Failed to save ${key}:`, error);
+  }
 }
 
 async function loadFromStorage<T>(key: string): Promise<T | null> {
   try {
-    const raw = await SecureStore.getItemAsync(key);
+    const raw = await AsyncStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn(`[ProgressStore] Failed to load ${key}:`, error);
     return null;
   }
 }
