@@ -44,16 +44,16 @@ const OPENCODE_PROXY_URL = process.env.EXPO_PUBLIC_OPENCODE_API_KEY_PROXY || "";
 const OPENCODE_BASE_URL = OPENCODE_PROXY_URL || "https://opencode.ai/zen/v1/chat/completions";
 
 const TEXT_MODELS = [
-  "big-pickle",
   "deepseek-v4-flash-free",
   "north-mini-code-free",
   "nemotron-3-ultra-free",
+  "big-pickle",
 ];
 const IMAGE_MODEL = "mimo-v2.5-free";
 
 function parseJSONOutput<T>(content: string): T {
   let cleaned = content.trim();
-  
+
   // Strip markdown code blocks if present (e.g. ```json ... ```)
   if (cleaned.includes("```")) {
     const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
@@ -71,7 +71,7 @@ function parseJSONOutput<T>(content: string): T {
   // Extract the JSON object boundaries to ignore conversational garbage
   const firstBrace = cleaned.indexOf('{');
   const firstBracket = cleaned.indexOf('[');
-  
+
   if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
     let braceCount = 0;
     let endBrace = -1;
@@ -124,19 +124,19 @@ export class AIService {
       if (__DEV__) {
         console.log("[AIService] Resizing image for upload:", decodedUri);
       }
-      
+
       const manipulatedResult = await manipulateAsync(
         decodedUri,
         [{ resize: { width: 600 } }],
         { compress: 0.5, format: SaveFormat.JPEG }
       );
-      
+
       if (__DEV__) {
         console.log("[AIService] Reading image with fetch:", manipulatedResult.uri);
       }
       const response = await fetch(manipulatedResult.uri);
       const blob = await response.blob();
-      
+
       return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {

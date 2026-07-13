@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "aceky-ai",
-    "slug": "aceky-ai",
+    "name": "Acekey-ai",
+    "slug": "acekey-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,11 +10,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.acekey.ai",
       "infoPlist": {
         "NSCameraUsageDescription": "AceKy AI needs camera access to scan and identify your meals."
       }
     },
     "android": {
+      "package": "com.acekey.ai",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -55,6 +57,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c87c4433-a5ea-497e-88ea-9927fbae15d4"
+      }
     }
   }
 }
