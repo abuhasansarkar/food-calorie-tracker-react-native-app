@@ -1,18 +1,18 @@
 {
   "expo": {
     "name": "Acekey-ai",
-    "slug": "acekey-ai",
+    "slug": "aceky-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "acekyai",
+    "scheme": "acekeyai",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.acekey.ai",
       "infoPlist": {
-        "NSCameraUsageDescription": "AceKy AI needs camera access to scan and identify your meals."
+        "NSCameraUsageDescription": "AceKey AI needs camera access to scan and identify your meals."
       }
     },
     "android": {
