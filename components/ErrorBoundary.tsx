@@ -1,5 +1,6 @@
 import { Component, ReactNode } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { colors } from "@/theme/colors";
 
 interface Props {
   children: ReactNode;
@@ -9,6 +10,28 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+}
+
+function DefaultFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
+  const isDark = useColorScheme() === "dark";
+  const bgColor = isDark ? colors.background.dark : colors.background.light;
+  const textColor = isDark ? colors.text.dark : colors.text.light;
+
+  return (
+    <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: bgColor }}>
+      <Text className="text-2xl font-bold mb-2" style={{ color: textColor }}>Something went wrong</Text>
+      <Text className="text-sm text-center mb-4" style={{ color: colors.neutral[500] }}>
+        {error?.message || "An unexpected error occurred"}
+      </Text>
+      <TouchableOpacity
+        onPress={onReset}
+        style={{ backgroundColor: colors.primary[500] }}
+        className="px-6 py-3 rounded-xl"
+      >
+        <Text className="font-bold text-black">Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -32,18 +55,10 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <View className="flex-1 items-center justify-center bg-white px-6">
-          <Text className="text-2xl font-bold mb-2">Something went wrong</Text>
-          <Text className="text-sm text-neutral-500 text-center mb-4">
-            {this.state.error?.message || "An unexpected error occurred"}
-          </Text>
-          <TouchableOpacity
-            onPress={this.handleReset}
-            className="px-6 py-3 bg-primary-500 rounded-xl"
-          >
-            <Text className="font-bold text-black">Try Again</Text>
-          </TouchableOpacity>
-        </View>
+        <DefaultFallback
+          error={this.state.error}
+          onReset={this.handleReset}
+        />
       );
     }
 

@@ -151,10 +151,10 @@ export default function FoodDetailScreen() {
 
         <View className="flex-row" style={{ gap: 10 }}>
           <Button
-            title="Edit Food"
+            title="Go Back"
             variant="outline"
             className="flex-1"
-            icon={<MaterialCommunityIcons name="pencil" size={16} color={colors.primary[500]} />}
+            icon={<MaterialCommunityIcons name="arrow-left" size={16} color={colors.primary[500]} />}
             onPress={() => router.back()}
           />
         </View>

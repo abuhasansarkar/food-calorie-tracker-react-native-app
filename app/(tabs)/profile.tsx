@@ -125,7 +125,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             
-            <View className="items-center flex-1 border-r border-neutral-200 dark:border-neutral-800">
+            <View className="items-center flex-1">
               <Text style={{ color: isDark ? colors.text.dark : colors.text.light }} className="text-base font-black">
                 {onboardingData?.weightKg ? `${onboardingData.weightKg} kg` : "—"}
               </Text>

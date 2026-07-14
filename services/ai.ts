@@ -175,6 +175,40 @@ export class AIService {
       combinations.push(
         {
           modelName: model,
+          formatName: "OpenAI image_url",
+          payload: {
+            model: model,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: `You are a professional nutritionist AI. Analyze this food image and return ONLY valid JSON with accurate nutritional data based on standard USDA and FDA nutritional databases. Include healthier alternatives for each food item.
+
+Rules:
+- Use standard serving sizes (e.g., "100g", "1 cup (240ml)", "1 medium (120g)")
+- Provide accurate calorie and macro estimates based on visual portion size
+- Confidence: 0-100 based on how clearly visible the food is
+- For each food, suggest 1-2 healthier alternatives with nutritional comparison
+- Name the overall meal (e.g., "Grilled Chicken Bowl")
+
+Return ONLY this exact JSON structure with no markdown, no extra text:
+{"mealName": "string", "foods": [{"name": "string", "servingSize": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "fiberG": 0, "sugarG": 0, "confidence": 0, "suggestions": [{"name": "string", "reason": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0}]}], "totalCalories": 0, "totalProtein": 0, "totalCarbs": 0, "totalFat": 0}`,
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:image/jpeg;base64,${base64}`,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          modelName: model,
           formatName: "Anthropic image source",
           payload: {
             model: model,
@@ -202,40 +236,6 @@ Return ONLY this exact JSON structure with no markdown, no extra text:
                       type: "base64",
                       media_type: "image/jpeg",
                       data: base64,
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        },
-        {
-          modelName: model,
-          formatName: "OpenAI image_url",
-          payload: {
-            model: model,
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: `You are a professional nutritionist AI. Analyze this food image and return ONLY valid JSON with accurate nutritional data based on standard USDA and FDA nutritional databases. Include healthier alternatives for each food item.
-
-Rules:
-- Use standard serving sizes (e.g., "100g", "1 cup (240ml)", "1 medium (120g)")
-- Provide accurate calorie and macro estimates based on visual portion size
-- Confidence: 0-100 based on how clearly visible the food is
-- For each food, suggest 1-2 healthier alternatives with nutritional comparison
-- Name the overall meal (e.g., "Grilled Chicken Bowl")
-
-Return ONLY this exact JSON structure with no markdown, no extra text:
-{"mealName": "string", "foods": [{"name": "string", "servingSize": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "fiberG": 0, "sugarG": 0, "confidence": 0, "suggestions": [{"name": "string", "reason": "string", "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0}]}], "totalCalories": 0, "totalProtein": 0, "totalCarbs": 0, "totalFat": 0}`,
-                  },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: `data:image/jpeg;base64,${base64}`,
                     },
                   },
                 ],
@@ -299,6 +299,14 @@ Return ONLY this exact JSON structure with no markdown, no extra text:
               console.log(`[AIService] ${combo.modelName} returned non-JSON response (model may not support image analysis), skipping this model`);
             }
             lastError = parseError;
+            break;
+          }
+
+          if (!result.foods || result.foods.length === 0) {
+            if (__DEV__) {
+              console.log(`[AIService] ${combo.modelName} (${combo.formatName}) returned empty food data (model did not receive image), trying next format`);
+            }
+            lastError = new Error("Empty food data in response");
             break;
           }
 

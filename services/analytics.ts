@@ -1,5 +1,5 @@
 import { Config } from "@/constants/Config";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ANALYTICS_QUEUE_KEY = "@aceky_analytics_queue";
 
@@ -26,7 +26,7 @@ class AnalyticsService {
   private async persistQueue(): Promise<void> {
     try {
       if (this.events.length > 0) {
-        await SecureStore.setItemAsync(ANALYTICS_QUEUE_KEY, JSON.stringify(this.events));
+        await AsyncStorage.setItem(ANALYTICS_QUEUE_KEY, JSON.stringify(this.events));
       }
     } catch (error) {
       if (__DEV__) console.warn("[Analytics] Failed to persist queue:", error);
@@ -35,11 +35,11 @@ class AnalyticsService {
 
   private async restoreQueue(): Promise<void> {
     try {
-      const raw = await SecureStore.getItemAsync(ANALYTICS_QUEUE_KEY);
+      const raw = await AsyncStorage.getItem(ANALYTICS_QUEUE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as AnalyticsEvent[];
         this.events = [...saved, ...this.events];
-        await SecureStore.deleteItemAsync(ANALYTICS_QUEUE_KEY);
+        await AsyncStorage.removeItem(ANALYTICS_QUEUE_KEY);
       }
     } catch (error) {
       if (__DEV__) console.warn("[Analytics] Failed to restore queue:", error);
@@ -122,8 +122,7 @@ class AnalyticsService {
     if (this.events.length === 0 || this.isFlushing) return;
 
     this.isFlushing = true;
-    const batch = [...this.events];
-    this.events = [];
+    const batch = this.events.splice(0, this.events.length);
 
     try {
       const response = await fetch(`${Config.api.baseUrl}/analytics/events`, {
@@ -136,16 +135,16 @@ class AnalyticsService {
         if (__DEV__) {
           console.warn("[Analytics] Failed to flush events:", response.status);
         }
-        this.events = [...batch, ...this.events];
+        this.events.unshift(...batch);
         await this.persistQueue();
         return;
       }
-      await SecureStore.deleteItemAsync(ANALYTICS_QUEUE_KEY);
+      await AsyncStorage.removeItem(ANALYTICS_QUEUE_KEY);
     } catch (error) {
       if (__DEV__) {
         console.warn("[Analytics] Flush failed, re-queuing events:", error);
       }
-      this.events = [...batch, ...this.events];
+      this.events.unshift(...batch);
       await this.persistQueue();
     } finally {
       this.isFlushing = false;

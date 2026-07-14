@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { useThemeContext } from "@/context/ThemeContext";
 
@@ -16,8 +16,10 @@ const ITEM_WIDTH = 12;
 export function ScrollRuler({ minValue, maxValue, defaultValue, unit, onValueChange }: ScrollRulerProps) {
   const { isDark, colors } = useThemeContext();
   const initialValue = defaultValue || minValue;
-  const [, setSelectedValue] = useState(initialValue);
+  const [selectedValue, setSelectedValue] = useState(initialValue);
   const scrollViewRef = useRef<ScrollView>(null);
+  const onChangeRef = useRef(onValueChange);
+  onChangeRef.current = onValueChange;
 
   const totalTicks = maxValue - minValue + 1;
   const paddingHorizontal = SCREEN_WIDTH / 2 - ITEM_WIDTH / 2;
@@ -31,13 +33,13 @@ export function ScrollRuler({ minValue, maxValue, defaultValue, unit, onValueCha
     return () => clearTimeout(timer);
   }, [initialValue, minValue]);
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = event.nativeEvent.contentOffset.x;
     const index = Math.round(x / ITEM_WIDTH);
     const value = Math.max(minValue, Math.min(maxValue, minValue + index));
     setSelectedValue(value);
-    onValueChange(value);
-  };
+    onChangeRef.current(value);
+  }, [minValue, maxValue]);
 
   const tickMarks = [];
   for (let i = 0; i < totalTicks; i++) {

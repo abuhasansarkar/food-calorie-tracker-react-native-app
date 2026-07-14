@@ -133,7 +133,14 @@ export default function WelcomeScreen() {
           style={{ color: isDark ? colors.text.tertiary : colors.neutral[400] }}
           className="text-[11px] text-center leading-4 px-4"
         >
-          By continuing, you agree to our Terms of Service and Privacy Policy.
+          By continuing, you agree to our{" "}
+          <Text style={{ color: colors.primary[500] }} className="font-bold" onPress={() => {}}>
+            Terms of Service
+          </Text>{" "}
+          and{" "}
+          <Text style={{ color: colors.primary[500] }} className="font-bold" onPress={() => {}}>
+            Privacy Policy
+          </Text>.
         </Text>
       </View>
     </SafeAreaView>

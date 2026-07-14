@@ -24,6 +24,7 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 
 const SCAN_FRAME_SIZE = 260;
 
@@ -40,6 +41,12 @@ export default function ScanScreen() {
   const [cameraReady, setCameraReady] = useState(false);
   const [pickedImageUri, setPickedImageUri] = useState<string | null>(null);
   const [isPicking, setIsPicking] = useState(false);
+  const { setTabBarVisible } = useTabBarVisibility();
+
+  useEffect(() => {
+    setTabBarVisible(false);
+    return () => setTabBarVisible(true);
+  }, []);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
@@ -112,7 +119,7 @@ export default function ScanScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'] as unknown as ImagePicker.MediaTypeOptions,
+        mediaTypes: ['images'],
         allowsEditing: true,
         quality: 0.8,
       });

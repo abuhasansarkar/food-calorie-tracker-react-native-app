@@ -3,6 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const GUEST_KEY = "aceky_guest_mode";
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.acekyai.com";
+
 export async function startGuestSession(): Promise<void> {
   await SecureStore.setItemAsync(GUEST_KEY, "true");
 }
@@ -29,7 +31,7 @@ export async function migrateGuestData(): Promise<void> {
       if (raw) {
         const data = JSON.parse(raw);
         try {
-          const response = await fetch("/api/data/migrate", {
+          const response = await fetch(`${API_BASE_URL}/api/data/migrate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ key, data }),

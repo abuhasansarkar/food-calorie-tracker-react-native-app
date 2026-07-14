@@ -66,9 +66,6 @@ function CustomTabBar({
     .sort((a, b) => tabOrder.indexOf(a.name) - tabOrder.indexOf(b.name));
 
   const activeRouteName = state.routes[state.index]?.name;
-  if (activeRouteName === "scan" || activeRouteName === "coach") {
-    return null;
-  }
 
   return (
     <Animated.View
